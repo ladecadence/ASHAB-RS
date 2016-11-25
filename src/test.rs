@@ -4,10 +4,13 @@ use std::io::prelude::*;
 mod gps;
 use gps::*;
 
+mod image;
+use image::*;
+
 // CONFIGURATION
 /////////////////
 
-static GPS_PORT_NAME: &'static str = "/dev/ttyUSB0";
+static GPS_PORT_NAME: &'static str = "/dev/ttyAMA0";
 
 const GPS_PORT_SETTINGS: serial::PortSettings = serial::PortSettings {
     baud_rate:    serial::Baud9600,
@@ -35,6 +38,16 @@ fn main() {
     }
 
     println!("{}N, {}W", gps.decimal_latitude(), gps.decimal_longitude());
+
+    let mut img: Image = Image::new(0, "ssdv", "/home/pi");
+    if img.capture() {
+	println!("Capturada imagen {}", img.filename);
+    }
+    else {
+	println!("Error");
+    }
+
+    img.capture();
 
     std::process::exit(0);
 }
