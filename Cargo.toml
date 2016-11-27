@@ -5,6 +5,7 @@ authors = ["David Pello <dpello@laboralcentrodearte.org>"]
 
 [dependencies]
 serial = "0.3.4"
+spidev = "0.3.0"
 
 [[bin]]
 name = "test"

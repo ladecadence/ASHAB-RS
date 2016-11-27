@@ -1,7 +1,4 @@
-use std::io;
 use std::process::Command;
-use std::io::prelude::*;
-use std::process::ExitStatus;
 
 static STILL_PROGRAM: &'static str = "raspistill";
 

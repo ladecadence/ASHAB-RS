@@ -1,4 +1,6 @@
 extern crate serial;
+extern crate spidev;
+
 use std::io::prelude::*;
 
 mod gps;
@@ -6,6 +8,9 @@ use gps::*;
 
 mod image;
 use image::*;
+
+mod rf95;
+use rf95::*;
 
 // CONFIGURATION
 /////////////////
@@ -25,20 +30,14 @@ const GPS_PORT_SETTINGS: serial::PortSettings = serial::PortSettings {
 //////////////////
 
 fn main() {
+    
+    // test gps
     let mut gps: GPS =  GPS::new(GPS_PORT_NAME);
     gps.config(GPS_PORT_SETTINGS);
     
-    for i in 0..256 {
-        let data = &mut[0];
-        data[0] = i as u8;
-        gps.port.as_mut().unwrap().write(data).unwrap();
-        data[0] = 0;
-        gps.port.as_mut().unwrap().read(data).unwrap();
-        println!("{}", data[0]);
-    }
-
     println!("{}N, {}W", gps.decimal_latitude(), gps.decimal_longitude());
 
+    // test Image
     let mut img: Image = Image::new(0, "ssdv", "/home/pi");
     if img.capture() {
 	println!("Capturada imagen {}", img.filename);
@@ -47,7 +46,22 @@ fn main() {
 	println!("Error");
     }
 
-    img.capture();
+    // test LoRa
+    let mut lora: RF95 = RF95::new(0, 25);
+    if lora.init() {
+        println!("LoRa init ok");
+    }
+    else {
+        println!("ERROR: LoRa not found");
+        std::process::exit(1);
+    }
+
+    lora.set_frequency(868.5);
+    lora.set_tx_power(5);
+
+    println!("Sending...");
+    lora.send("$$TELEMETRY TEST".as_bytes());
+    lora.wait_packet_sent();
 
     std::process::exit(0);
 }

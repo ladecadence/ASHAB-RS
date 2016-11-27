@@ -4,6 +4,7 @@ extern crate serial;
 use std::io::prelude::*;
 use std::io::BufReader;
 use serial::prelude::*;
+use std::time::Duration;
 
 const FIELD_TIME: usize = 1;
 const FIELD_LAT: usize = 2;
@@ -59,6 +60,7 @@ impl GPS {
             Ok(_) => {}
         }
         self.port.as_mut().unwrap().configure(&settings).unwrap();
+	self.port.as_mut().unwrap().set_timeout(Duration::from_millis(1000)).unwrap();
     }   
 
     pub fn update(&mut self) -> bool {
@@ -92,7 +94,7 @@ impl GPS {
             match gga_data[FIELD_SATS].parse::<u8>()
             {
                 Ok(x) => self.sats = x,
-                Err(e) => { self.sats = 0; return false }
+                _ => { self.sats = 0; return false }
             }
             if self.sats < MIN_SATS {
                 return false;
@@ -102,7 +104,7 @@ impl GPS {
             match gga_data[FIELD_LAT].parse::<f32>()
             {
                 Ok(x) => self.latitude = x,
-                Err(e) => self.latitude = 0.0
+                _ => self.latitude = 0.0
             }
 
             match gga_data[FIELD_NS].chars().nth(0)
@@ -114,14 +116,40 @@ impl GPS {
             match gga_data[FIELD_LON].parse::<f32>()
             {
                 Ok(x) => self.longitude = x,
-                Err(e) => self.longitude = 0.0
+                _ => self.longitude = 0.0
             }
 
-            self.ew = gga_data[FIELD_EW].chars().nth(0).unwrap();
-            self.sats = gga_data[FIELD_SATS].parse::<u8>().unwrap();
-            self.altitude = gga_data[FIELD_ALT].parse::<f32>().unwrap();
-            self.speed = rmc_data[FIELD_SPEED].parse::<f32>().unwrap();
-            self.heading = rmc_data[FIELD_HDG].parse::<f32>().unwrap();
+            match gga_data[FIELD_EW].chars().nth(0)
+			{
+				Some(x) => self.ew = x,
+				None => self.ew = 'W'
+			}
+				
+
+            match gga_data[FIELD_SATS].parse::<u8>()
+			{
+				Ok(x) => self.sats = x,
+				_ => self.sats = 0
+			}
+
+            match gga_data[FIELD_ALT].parse::<f32>()
+			{
+				Ok(x) => self.altitude = x,
+				_ => self.altitude = 0.0
+			}
+
+            match rmc_data[FIELD_SPEED].parse::<f32>()
+			{
+				Ok(x) => self.speed = x,
+				_ => self.speed = 0.0
+			}
+
+            match rmc_data[FIELD_HDG].parse::<f32>()
+			{
+				Ok(x) => self.heading = x,
+				_ => self.heading = 0.0
+			}
+
             self.date = String::from(rmc_data[FIELD_DATE]);
 
         }
