@@ -210,40 +210,42 @@ const RADIO_MODE_CAD: u8 = 5;
 
 #[allow(dead_code)]
 pub struct RF95 {
-mode: u8,
-          buf: [u8; 256],
-          buflen: u8,
-          last_rssi: i8,
-          rx_bad: u16,
-          rx_good: u16,
-          tx_good: u16,
-          rx_buf_valid: bool,
-          pub spidev: Spidev,
-          pub channel: u8,
-          pub int_pin: u8
+    mode: u8,
+    buf: [u8; 256],
+    buflen: u8,
+    last_rssi: i8,
+    rx_bad: u16,
+    rx_good: u16,
+    tx_good: u16,
+    rx_buf_valid: bool,
+    pub spidev: Spidev,
+    pub channel: u8,
+    pub int_pin: u8
 }
 
 impl RF95 {
     pub fn new(ch: u8, int: u8) -> RF95 { 
         RF95 {
-mode : RADIO_MODE_INITIALISING,
-     buf : [0; 256],
-     buflen : 0,
-     last_rssi: -99,
-     rx_bad: 0,
-     rx_good: 0,
-     tx_good: 0,
-     rx_buf_valid: false,
-     channel: ch,
-     int_pin: int,
-     spidev: Spidev::open(String::from("/dev/spidev0.") + &ch.to_string()).unwrap()
+            mode : RADIO_MODE_INITIALISING,
+            buf : [0; 256],
+            buflen : 0,
+            last_rssi: -99,
+            rx_bad: 0,
+            rx_good: 0,
+            tx_good: 0,
+            rx_buf_valid: false,
+            channel: ch,
+            int_pin: int,
+            spidev: Spidev::open(String::from("/dev/spidev0.") + &ch.to_string()).unwrap()
         }
     }
 
+    // write one byte of data to register addr
     pub fn spi_write(&mut self, reg: u8, byte: u8) {
         self.spidev.write(&[reg | SPI_WRITE_MASK, byte]).unwrap();
     }
 
+    // read one byte of data from register addr
     pub fn spi_read(&mut self, reg: u8) -> u8 {
         let mut rx = [0_u8, 2];
         let tx: [u8; 2] = [reg, 0];
@@ -255,6 +257,7 @@ mode : RADIO_MODE_INITIALISING,
         rx[1]
     }
 
+    // write a slice (array) of data to register addr
     pub fn spi_write_data(&mut self, reg: u8, data: &[u8]) {
         // bounds
         if data.len() > MAX_MESSAGE_LEN as usize {
@@ -270,6 +273,7 @@ mode : RADIO_MODE_INITIALISING,
         self.spidev.write(&tx).unwrap();
     }
 
+    // configure SPI bus and RF95 LoRa default mode 
     pub fn init(&mut self) -> bool {
         // configure SPI and initialize RF95
         let options = SpidevOptions::new()
@@ -367,6 +371,7 @@ mode : RADIO_MODE_INITIALISING,
         self.spi_write(REG_09_PA_CONFIG, PA_SELECT | (power-5));
     }
 
+    // set mode from default modes
     pub fn set_modem_config(&mut self, mode: (u8, u8, u8)) {
         self.spi_write(REG_1D_MODEM_CONFIG1, mode.0);
         self.spi_write(REG_1E_MODEM_CONFIG2, mode.1);
