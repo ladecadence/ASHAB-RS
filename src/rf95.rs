@@ -396,6 +396,17 @@ impl RF95 {
         self.spi_write(REG_26_MODEM_CONFIG3, mode.2);
     }
 
+    pub fn set_modem_config_custom(&mut self, bandwidth: u8, coding_rate: u8, 
+                                   implicit_header: u8, spreading_factor: u8, crc: u8, 
+                                   continuous_tx: u8, timeout: u8, agc_auto: u8) {
+        self.spi_write(REG_1D_MODEM_CONFIG1, 
+                       bandwidth | coding_rate | implicit_header);
+        self.spi_write(REG_1E_MODEM_CONFIG2,
+                       spreading_factor | continuous_tx | crc | timeout);
+        self.spi_write(REG_26_MODEM_CONFIG3, agc_auto);
+    }
+
+
     pub fn set_preamble_length(&mut self, len: u16) {
         self.spi_write(REG_20_PREAMBLE_MSB, (len >> 8) as u8);
         self.spi_write(REG_21_PREAMBLE_LSB, (len & 0xff) as u8);
