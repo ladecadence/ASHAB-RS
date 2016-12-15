@@ -105,54 +105,21 @@ impl GPS {
             }
 
             // ok parse elements if possible, if not provide default values
-            match gga_data[FIELD_LAT].parse::<f32>()
-            {
-                Ok(x) => self.latitude = x,
-                _ => self.latitude = 0.0
-            }
+            self.latitude =  gga_data[FIELD_LAT].parse::<f32>().unwrap_or(0.0);
 
-            match gga_data[FIELD_NS].chars().nth(0)
-            {
-                Some(x) => self.ns = x,
-                None => self.ns = 'N'
-            }
+            self.ns = gga_data[FIELD_NS].chars().nth(0).unwrap_or('N');
 
-            match gga_data[FIELD_LON].parse::<f32>()
-            {
-                Ok(x) => self.longitude = x,
-                _ => self.longitude = 0.0
-            }
+            self.longitude = gga_data[FIELD_LON].parse::<f32>().unwrap_or(0.0);
 
-            match gga_data[FIELD_EW].chars().nth(0)
-			{
-				Some(x) => self.ew = x,
-				None => self.ew = 'W'
-			}
-				
+            self.ew = gga_data[FIELD_EW].chars().nth(0).unwrap_or('W');
 
-            match gga_data[FIELD_SATS].parse::<u8>()
-			{
-				Ok(x) => self.sats = x,
-				_ => self.sats = 0
-			}
+            self.sats = gga_data[FIELD_SATS].parse::<u8>().unwrap_or(0);
 
-            match gga_data[FIELD_ALT].parse::<f32>()
-			{
-				Ok(x) => self.altitude = x,
-				_ => self.altitude = 0.0
-			}
+            self.altitude = gga_data[FIELD_ALT].parse::<f32>().unwrap_or(0.0);
 
-            match rmc_data[FIELD_SPEED].parse::<f32>()
-			{
-				Ok(x) => self.speed = x,
-				_ => self.speed = 0.0
-			}
+            self.speed = rmc_data[FIELD_SPEED].parse::<f32>().unwrap_or(0.0);
 
-            match rmc_data[FIELD_HDG].parse::<f32>()
-			{
-				Ok(x) => self.heading = x,
-				_ => self.heading = 0.0
-			}
+            self.heading = rmc_data[FIELD_HDG].parse::<f32>().unwrap_or(0.0);
 
             self.date = String::from(rmc_data[FIELD_DATE]);
 
