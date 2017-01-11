@@ -18,10 +18,12 @@
 
 #![allow (dead_code)]
 extern crate spidev;
-use std::io;
+extern crate sysfs_gpio;
+
 use std::io::prelude::*;
 use spidev::{Spidev, SpidevOptions, SpidevTransfer, SPI_MODE_0};
 use std::{thread, time};
+use sysfs_gpio::{Direction, Pin};
 
 const FXOSC: f32 = 32000000.0;
 const FSTEP: f32 = FXOSC / 524288.0;
@@ -238,7 +240,9 @@ pub struct RF95 {
     rx_buf_valid: bool,
     pub spidev: Spidev,
     pub channel: u8,
-    pub int_pin: u8
+    pub int_pin_number: u8,
+    int_pin: Pin,
+    int_thread: thread::Builder,
 }
 
 impl RF95 {
@@ -253,8 +257,10 @@ impl RF95 {
             tx_good: 0,
             rx_buf_valid: false,
             channel: ch,
-            int_pin: int,
-            spidev: Spidev::open(String::from("/dev/spidev0.") + &ch.to_string()).unwrap()
+            int_pin_number: int,
+            spidev: Spidev::open(String::from("/dev/spidev0.") + &ch.to_string()).unwrap(),
+            int_pin: Pin::new(int as u64),
+            int_thread: thread::Builder::new().name("rf95_int".into()),
         }
     }
 
@@ -293,6 +299,7 @@ impl RF95 {
 
     // configure SPI bus and RF95 LoRa default mode 
     pub fn init(&mut self) -> bool {
+
         // configure SPI and initialize RF95
         let options = SpidevOptions::new()
             .bits_per_word(8)
@@ -320,6 +327,11 @@ impl RF95 {
 
         self.set_modem_config(BW125_CR45_SF128);
         self.set_preamble_length(8);
+
+        // setup gpio
+        self.int_pin.export().unwrap();
+        self.int_pin.set_direction(Direction::In).unwrap();
+
 
         true
     }

@@ -60,13 +60,13 @@ impl GPS {
             Ok(_) => {}
         }
         self.port.as_mut().unwrap().configure(&settings).unwrap();
-	self.port.as_mut().unwrap().set_timeout(Duration::from_millis(1000)).unwrap();
+        self.port.as_mut().unwrap().set_timeout(Duration::from_millis(1000)).unwrap();
     }   
 
     pub fn update(&mut self) -> bool {
         let mut reader =  BufReader::new(self.port.as_mut().unwrap());
 
-        
+
         // Get GGA line
         self.line_gga.clear();
         let mut is_gga: String = self.line_gga.chars().skip(3).take(3).collect();
@@ -86,7 +86,7 @@ impl GPS {
         // Now parse data
         let gga_data: Vec<&str> = self.line_gga.split(",").collect();
         let rmc_data: Vec<&str> = self.line_rmc.split(",").collect();
-        
+
         // enough fields?
         if gga_data.len() >= 9 && rmc_data.len() >= 8 {
 
@@ -120,35 +120,35 @@ impl GPS {
             }
 
             match gga_data[FIELD_EW].chars().nth(0)
-			{
-				Some(x) => self.ew = x,
-				None => self.ew = 'W'
-			}
-				
+            {
+                Some(x) => self.ew = x,
+                None => self.ew = 'W'
+            }
+
 
             match gga_data[FIELD_SATS].parse::<u8>()
-			{
-				Ok(x) => self.sats = x,
-				_ => self.sats = 0
-			}
+            {
+                Ok(x) => self.sats = x,
+                _ => self.sats = 0
+            }
 
             match gga_data[FIELD_ALT].parse::<f32>()
-			{
-				Ok(x) => self.altitude = x,
-				_ => self.altitude = 0.0
-			}
+            {
+                Ok(x) => self.altitude = x,
+                _ => self.altitude = 0.0
+            }
 
             match rmc_data[FIELD_SPEED].parse::<f32>()
-			{
-				Ok(x) => self.speed = x,
-				_ => self.speed = 0.0
-			}
+            {
+                Ok(x) => self.speed = x,
+                _ => self.speed = 0.0
+            }
 
             match rmc_data[FIELD_HDG].parse::<f32>()
-			{
-				Ok(x) => self.heading = x,
-				_ => self.heading = 0.0
-			}
+            {
+                Ok(x) => self.heading = x,
+                _ => self.heading = 0.0
+            }
 
             self.date = String::from(rmc_data[FIELD_DATE]);
 
