@@ -19,7 +19,7 @@ use ds18b20::*;
 // CONFIGURATION
 /////////////////
 
-static GPS_PORT_NAME: &'static str = "/dev/ttyAMA0";
+static GPS_PORT_NAME: &'static str = "/dev/ttyUSB0";
 
 const GPS_PORT_SETTINGS: serial::PortSettings = serial::PortSettings {
     baud_rate:    serial::Baud9600,
@@ -36,10 +36,12 @@ const GPS_PORT_SETTINGS: serial::PortSettings = serial::PortSettings {
 fn main() {
     
     // test gps
-    //let mut gps: GPS =  GPS::new(GPS_PORT_NAME);
-    //gps.config(GPS_PORT_SETTINGS);
-    
-    //println!("{}N, {}W", gps.decimal_latitude(), gps.decimal_longitude());
+    let mut gps: GPS =  GPS::new(GPS_PORT_NAME);
+    gps.config(GPS_PORT_SETTINGS);
+   
+    gps.update();
+    println!("{}", if gps.sats >=4 { "GPS FIX OK" } else { "NO GPS FIX" });
+    println!("{}N, {}W", gps.decimal_latitude(), gps.decimal_longitude());
 
     // test Image
     let mut img: Image = Image::new(0, "ssdv", "/home/pi");
