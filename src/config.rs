@@ -21,8 +21,8 @@ pub struct Config {
     pub gps_serial_port: String,
     pub gps_speed: u32,
 
-    pub lora_cs: u32,
-    pub lora_int_pin: u32,
+    pub lora_cs: u8,
+    pub lora_int_pin: u8,
     pub lora_freq: f32,
     pub lora_low_pwr: u32,
     pub lora_high_pwr: u32,
@@ -95,7 +95,7 @@ impl Config {
         // open config file
         let conf = match Ini::load_from_file(&self.file) {
             Ok(c) => c,
-            Err(e) => return Err(Error::new(ErrorKind::NotFound, "Can't open file")),
+            Err(_e) => return Err(Error::new(ErrorKind::NotFound, "Can't open config file")),
         };
         // get mission section
         let section_mission = match conf.section(Some("mission".to_owned())) {
@@ -134,8 +134,8 @@ impl Config {
             None => return Err(Error::new(ErrorKind::Other, "Section lora not found")),
         };
 
-        self.lora_cs = section_lora.get("cs").unwrap().parse::<u32>().unwrap();
-        self.lora_int_pin = section_lora.get("int_pin").unwrap().parse::<u32>().unwrap();
+        self.lora_cs = section_lora.get("cs").unwrap().parse::<u8>().unwrap();
+        self.lora_int_pin = section_lora.get("int_pin").unwrap().parse::<u8>().unwrap();
         self.lora_freq = section_lora.get("freq").unwrap().parse::<f32>().unwrap();
         self.lora_low_pwr = section_lora.get("low_pwr").unwrap().parse::<u32>().unwrap();
         self.lora_high_pwr = section_lora.get("high_pwr").unwrap().parse::<u32>().unwrap();
