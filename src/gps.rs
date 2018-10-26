@@ -4,6 +4,7 @@ extern crate serial;
 use std::io::prelude::*;
 use std::io::BufReader;
 use serial::prelude::*;
+use serial::BaudRate;
 use std::time::Duration;
 
 const FIELD_TIME: usize = 1;
@@ -33,11 +34,12 @@ pub struct GPS {
     pub line_rmc: String,
     pub date: String,
     pub port: Result<serial::posix::TTYPort, serial::Error>,
+    settings: serial::PortSettings,
 }
 
 #[allow(dead_code)]
 impl GPS {
-    pub fn new (port_name: &str) -> GPS { 
+    pub fn new (port_name: &str, speed: u32) -> GPS { 
         GPS {
             latitude : 4331.50,
             ns : 'N',
@@ -51,21 +53,28 @@ impl GPS {
             line_rmc : String::from(""),
             date: String::from(""),
             port : serial::open(port_name),
+            settings: serial::PortSettings {
+                baud_rate: BaudRate::from_speed(speed as usize),
+                char_size: serial::Bits8,
+                parity: serial::ParityNone,
+                stop_bits: serial::Stop1,
+                flow_control: serial::FlowNone,
+            },
+
         }
     }
 
-    pub fn config(&mut self, settings: serial::PortSettings) {
+    pub fn config(&mut self) { //, settings: serial::PortSettings) {
         match self.port.as_ref() {
             Err(err) => panic!("Can't open GPS serial port: {}", err),
             Ok(_) => {}
         }
-        self.port.as_mut().unwrap().configure(&settings).unwrap();
+        self.port.as_mut().unwrap().configure(&self.settings).unwrap();
         self.port.as_mut().unwrap().set_timeout(Duration::from_millis(1000)).unwrap();
     }   
 
     pub fn update(&mut self) -> bool {
         let mut reader =  BufReader::new(self.port.as_mut().unwrap());
-
 
         // Get GGA line
         self.line_gga.clear();
