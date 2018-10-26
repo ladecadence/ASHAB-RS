@@ -1,11 +1,15 @@
 [package]
 name = "ashab_gps"
 version = "0.1.0"
-authors = ["David Pello <dpello@laboralcentrodearte.org>"]
+authors = ["David Pello <dpello@ladecadence.net>"]
 
 [dependencies]
 serial = "0.3.4"
 spidev = "0.3.0"
+sysfs_gpio = "0.4.4"
+chrono = "0.2"
+rust-ini = "0.13"
+
 
 [[bin]]
 name = "test"
