@@ -1,4 +1,5 @@
 use std::io::prelude::*;
+use std::io;
 use std::io::BufReader;
 use std::fs::File;
 use std::str::FromStr;
@@ -19,8 +20,13 @@ impl DS18B20 {
 
 	}
 
-	pub fn read(&mut self) -> f32 {
-		let f = File::open(self.device.as_str()).unwrap();
+	pub fn read(&mut self) -> Result<f32, io::Error> {
+        // try to open file or return Err
+		let f = match File::open(self.device.as_str()) {
+            Ok(file) => file,
+            Err(e) => return Err(e),
+        };
+
 		let mut reader = BufReader::new(f);
 
 		let mut buffer = String::new();
@@ -35,9 +41,9 @@ impl DS18B20 {
 	 	self.temp = f32::from_str(&data[9][2..].trim()).unwrap_or(999999.0);
 		self.temp = self.temp / 1000.0;
 		
-		self.temp
+        // return Ok(temp)
+		Ok(self.temp)
 	}
 }
-
 
 
