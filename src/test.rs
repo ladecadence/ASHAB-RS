@@ -2,7 +2,12 @@ extern crate serial;
 extern crate spidev;
 extern crate sysfs_gpio;
 extern crate chrono;
+extern crate ini;
 
+// crate uses
+use serial::prelude::*;
+
+// own uses
 mod gps;
 use gps::*;
 
@@ -15,47 +20,47 @@ use rf95::*;
 mod ds18b20;
 use ds18b20::*;
 
+mod config;
+use config::*;
+
 mod log;
 use log::*;
 
 // CONFIGURATION
 /////////////////
 
-static GPS_PORT_NAME: &'static str = "/dev/ttyAMA0";
-
-const GPS_PORT_SETTINGS: serial::PortSettings = serial::PortSettings {
-    baud_rate:    serial::Baud9600,
-    char_size:    serial::Bits8,
-    parity:       serial::ParityNone,
-    stop_bits:    serial::Stop1,
-    flow_control: serial::FlowNone
-};
-
+const CONFIG_FILE: &'static str = "/home/pi/nsx.cfg";
 
 // MAIN
 //////////////////
 
 fn main() {
+    // test configuration file
+    let mut config: Config = Config::new(CONFIG_FILE);
+    match config.open() {
+        Ok(()) => println!("{:?}", config),
+        Err(e) => { println!("Error: {}", e); std::process::exit(1); },
+    };
+
     
     // test gps
-    let mut gps: GPS =  GPS::new(GPS_PORT_NAME);
-    gps.config(GPS_PORT_SETTINGS);
+    let mut gps: GPS =  GPS::new(&config.gps_serial_port, config.gps_speed);
+    //gps.config(GPS_PORT_SETTINGS);
+    gps.config();
    
-    //gps.update();
-    //println!("{}", if gps.sats >=4 { "GPS FIX OK" } else { "NO GPS FIX" });
-    //println!("{}N, {}W", gps.decimal_latitude(), gps.decimal_longitude());
+    gps.update();
+    println!("{}", if gps.sats >=4 { "GPS FIX OK" } else { "NO GPS FIX" });
+    println!("{}N, {}W", gps.decimal_latitude(), gps.decimal_longitude());
 
     // test Image
     let mut img: Image = Image::new(0, "ssdv", "/home/pi");
-    if img.capture() {
-	println!("Capturada imagen {}", img.filename);
-    }
-    else {
-	println!("Error");
-    }
+    match img.capture() {
+        Ok(()) => println!("Capturada imagen {}", img.filename),
+        Err(e) => println!("Error tomando foto {}", e),
+    };
 
     // test LoRa
-    let mut lora: RF95 = RF95::new(0, 25);
+    let mut lora: RF95 = RF95::new(config.lora_cs, config.lora_int_pin);
     if lora.init() {
         println!("LoRa init ok");
     }
@@ -72,11 +77,11 @@ fn main() {
     //lora.wait_packet_sent();
 
     // test temperature sensor
-    let mut temp_sensor: DS18B20 = DS18B20::new("28-031682a91bff");
-    println!("Temperature: {}", temp_sensor.read());
+    let mut temp_sensor: DS18B20 = DS18B20::new(&config.temp_external_addr);
+    println!("Temperature: {}", temp_sensor.read().unwrap());
 
     // test log
-    let mut log: Log = Log::new("prueba.txt");
+    let mut log: Log = Log::new("/home/pi/prueba.txt");
 
     log.init();
     log.log(LogType::Info, "Probando Log");
