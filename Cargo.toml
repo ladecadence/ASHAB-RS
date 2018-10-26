@@ -7,7 +7,7 @@ authors = ["David Pello <dpello@ladecadence.net>"]
 serial = "0.3.4"
 spidev = "0.3.0"
 sysfs_gpio = "0.4.4"
-chrono = "0.2"
+chrono = "0.4"
 rust-ini = "0.13"
 
 
