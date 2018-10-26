@@ -1,6 +1,6 @@
 extern crate chrono;
 
-use chrono::*;
+use chrono::prelude::*;
 use std::io::prelude::*;
 use std::fs::OpenOptions;
 
@@ -27,7 +27,7 @@ impl Log {
 
 	pub fn init(&mut self) {
 		// create new file or erase if it exists
-		let f = OpenOptions::new()
+		let _f = OpenOptions::new()
 			.create(true)
 			.truncate(true)
 			.write(true)
@@ -47,7 +47,7 @@ impl Log {
 			LogType::Warn => f.write_all(b"WARN::").unwrap(),
 			LogType::Err  => f.write_all(b" ERR::").unwrap(),
 		}
-		f.write_all(UTC::now().to_rfc3339().as_bytes()).unwrap();
+		f.write_all(Utc::now().to_rfc3339().as_bytes()).unwrap();
 		f.write_all(b":: ").unwrap();
 		f.write_all(msg.as_bytes()).unwrap();
 		f.write_all(b"\n").unwrap();
