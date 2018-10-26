@@ -41,12 +41,12 @@ impl Log {
 			.create(true)
 			.open(self.filename.as_str()).unwrap();
 		// log msg
-		//match t {
-		//	LogType::Data => f.write_all(b"DATA::").unwrap(),
-		//	LogType::Info => f.write_all(b"INFO::").unwrap(),
-		//	LogType::Warn => f.write_all(b"WARN::").unwrap(),
-		//	LogType::Err  => f.write_all(b" ERR::").unwrap(),
-		//}
+		match t {
+			LogType::Data => f.write_all(b"DATA::").unwrap(),
+			LogType::Info => f.write_all(b"INFO::").unwrap(),
+			LogType::Warn => f.write_all(b"WARN::").unwrap(),
+			LogType::Err  => f.write_all(b" ERR::").unwrap(),
+		}
 		f.write_all(UTC::now().to_rfc3339().as_bytes()).unwrap();
 		f.write_all(b":: ").unwrap();
 		f.write_all(msg.as_bytes()).unwrap();
