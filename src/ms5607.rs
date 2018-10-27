@@ -21,11 +21,11 @@ const MS5607_CMD_PROM_RD: u8    = 0xA0;    // readout of PROM registers
 struct Ms5607 {
     pub bus: LinuxI2CDevice,
     pub addr: u8,
-    pub prom: [u16, 7],
+    pub prom: [u16; 7],
 }
 
 impl Ms5607 {
-    pub new(b: u8, a: u8) -> Ms5607 {
+    pub fn new(b: u8, a: u8) -> Ms5607 {
         Ms5607 {
             bus: LinuxI2CDevice::new(format!("/dev/i2c-{}", b), a)?,
             addr: a,
@@ -33,7 +33,7 @@ impl Ms5607 {
         }
     }
 
-    pub read_prom(&mut self) -> Result<(), &'static str> {
+    pub fn read_prom(&mut self) -> Result<(), &'static str> {
         self.bus.smbus_write_byte_data(0x00, MS5607_CMD_RESET)?;
         thread::sleep(Duration::from_millis(30));
         for i in 0..7 {
