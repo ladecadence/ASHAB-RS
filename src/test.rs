@@ -4,9 +4,6 @@ extern crate sysfs_gpio;
 extern crate chrono;
 extern crate ini;
 
-// crate uses
-use serial::prelude::*;
-
 // own uses
 mod gps;
 use gps::*;
@@ -25,6 +22,12 @@ use config::*;
 
 mod log;
 use log::*;
+
+mod led;
+use led::*;
+
+mod ms5607;
+use ms5607::*;
 
 // CONFIGURATION
 /////////////////
@@ -86,6 +89,17 @@ fn main() {
     log.init();
     log.log(LogType::Info, "Probando Log");
     log.log(LogType::Warn, "Advertencia!!!");
+    log.log(LogType::Data, &format!("External temperature: {}", temp_sensor.read().unwrap()));
+    log.log(LogType::Error, "Vamos a morir!");
+
+    // test led
+    let mut led: LED = LED::new(config.led_pin);
+    match led.init() {
+        Ok(()) => {},
+        Err(e) => println!("{}", e),
+    }
+    led.blink();
+    led.err();
 
     std::process::exit(0);
 }
