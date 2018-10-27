@@ -15,8 +15,8 @@ pub struct Config {
     pub packet_repeat: u32,
     pub packet_delay: u32,
 
-    pub batt_enable_pin: u32,
-    pub led_pin: u32,
+    pub batt_enable_pin: u8,
+    pub led_pin: u8,
 
     pub gps_serial_port: String,
     pub gps_speed: u32,
@@ -27,7 +27,7 @@ pub struct Config {
     pub lora_low_pwr: u32,
     pub lora_high_pwr: u32,
 
-    pub adc_cs: u32,
+    pub adc_cs: u8,
     pub adc_vbatt: u32,
     pub adc_v_divider: f32,
     pub adc_v_mult: u32,
@@ -116,8 +116,8 @@ impl Config {
             None => return Err(Error::new(ErrorKind::Other, "Section gpio not found")),
         };
 
-        self.batt_enable_pin = section_gpio.get("batt_enable_pin").unwrap().parse::<u32>().unwrap();
-        self.led_pin = section_gpio.get("led_pin").unwrap().parse::<u32>().unwrap();
+        self.batt_enable_pin = section_gpio.get("batt_enable_pin").unwrap().parse::<u8>().unwrap();
+        self.led_pin = section_gpio.get("led_pin").unwrap().parse::<u8>().unwrap();
 
         // get gps section
         let section_gps = match conf.section(Some("gps".to_owned())) {
@@ -146,7 +146,7 @@ impl Config {
             None => return Err(Error::new(ErrorKind::Other, "Section adc not found")),
         };
 
-        self.adc_cs = section_adc.get("cs").unwrap().parse::<u32>().unwrap();
+        self.adc_cs = section_adc.get("cs").unwrap().parse::<u8>().unwrap();
         self.adc_vbatt = section_adc.get("vbatt").unwrap().parse::<u32>().unwrap();
         self.adc_v_divider = section_adc.get("v_divider").unwrap().parse::<f32>().unwrap();
         self.adc_v_mult = section_adc.get("v_mult").unwrap().parse::<u32>().unwrap();
