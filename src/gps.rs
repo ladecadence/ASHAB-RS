@@ -20,6 +20,29 @@ const FIELD_DATE: usize = 9;
 
 const MIN_SATS: u8 = 4;
 
+#[derive(Debug)]
+pub enum GpsErrorType {
+    Open,
+    GGA,
+    RMC,
+    Sats,
+    Fix,
+    Parse,
+}
+
+#[derive(Debug)]
+pub struct GpsError {
+    pub error_type: GpsErrorType,
+}
+
+impl GpsError {
+    pub fn new (t: GpsErrorType) -> GpsError {
+        GpsError {
+            error_type : t,
+        }
+    }
+}
+
 #[allow(dead_code)]
 pub struct GPS {
     pub latitude: f32,
@@ -64,16 +87,18 @@ impl GPS {
         }
     }
 
-    pub fn config(&mut self) { //, settings: serial::PortSettings) {
+    pub fn config(&mut self) -> Result<(), GpsError> { //, settings: serial::PortSettings) {
         match self.port.as_ref() {
-            Err(err) => panic!("Can't open GPS serial port: {}", err),
+            Err(_e) => return Err(GpsError::new(GpsErrorType::Open)),
             Ok(_) => {}
         }
         self.port.as_mut().unwrap().configure(&self.settings).unwrap();
         self.port.as_mut().unwrap().set_timeout(Duration::from_millis(1000)).unwrap();
+
+        Ok(())
     }   
 
-    pub fn update(&mut self) -> bool {
+    pub fn update(&mut self) -> Result<(), GpsError> {
         let mut reader =  BufReader::new(self.port.as_mut().unwrap());
 
         // Get GGA line
@@ -81,20 +106,26 @@ impl GPS {
         let mut is_gga: String = self.line_gga.chars().skip(3).take(3).collect();
         while is_gga != "GGA".to_string() {
             self.line_gga.clear();
-            reader.read_line(&mut self.line_gga).unwrap();
+            match reader.read_line(&mut self.line_gga) {
+                Ok(_) => {},
+                Err(_e) => return Err(GpsError::new(GpsErrorType::GGA)),
+            }
             is_gga = self.line_gga.chars().skip(3).take(3).collect();
         }
-        println!("Ok: GGA");
+        //println!("Ok: GGA");
 
         // and get RMC line
         self.line_rmc.clear();
         let mut is_rmc: String = self.line_rmc.chars().skip(3).take(3).collect();
         while is_rmc != "RMC".to_string() {
             self.line_rmc.clear();
-            reader.read_line(&mut self.line_rmc).unwrap();
+            match reader.read_line(&mut self.line_rmc) {
+                Ok(_) => {},
+                Err(_e) => return Err(GpsError::new(GpsErrorType::RMC)),
+            }
             is_rmc = self.line_rmc.chars().skip(3).take(3).collect();
         }
-        println!("Ok: RMC");
+        //println!("Ok: RMC");
 
         // Now parse data
         let gga_data: Vec<&str> = self.line_gga.split(",").collect();
@@ -107,10 +138,10 @@ impl GPS {
             match gga_data[FIELD_SATS].parse::<u8>()
             {
                 Ok(x) => self.sats = x,
-                _ => { self.sats = 0; return false }
+                _ => { self.sats = 0; return Err(GpsError::new(GpsErrorType::Fix)) }
             }
             if self.sats < MIN_SATS {
-                return false;
+                return Err(GpsError::new(GpsErrorType::Sats));
             }
 
             // ok parse elements if possible, if not provide default values
@@ -132,12 +163,11 @@ impl GPS {
 
             self.date = String::from(rmc_data[FIELD_DATE]);
 
-        }
-        else {
-            return false;
+        } else {
+            return Err(GpsError::new(GpsErrorType::Parse));
         }
 
-        return true;
+        Ok(())
 
     }
 
