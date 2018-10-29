@@ -3,6 +3,7 @@ use sysfs_gpio::{Direction, Pin};
 use std::time::Duration;
 use std::thread;
 
+#[allow(dead_code)]
 pub struct LED {
     pub pin: Pin,
 }
