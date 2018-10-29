@@ -4,6 +4,7 @@ use std::io::BufReader;
 use std::fs::File;
 use std::str::FromStr;
 
+#[allow(dead_code)]
 pub struct DS18B20 {
 	pub device: String,
 	pub temp: f32,
