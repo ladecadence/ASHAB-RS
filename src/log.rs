@@ -4,7 +4,7 @@ use chrono::prelude::*;
 use std::io::prelude::*;
 use std::fs::OpenOptions;
 
-
+#[allow(dead_code)]
 pub enum LogType {
 	Data,
 	Info,
@@ -12,6 +12,7 @@ pub enum LogType {
 	Error,
 }
 
+#[allow(dead_code)]
 pub struct Log {
 	pub filename: String,
 }
