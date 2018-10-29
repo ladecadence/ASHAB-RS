@@ -26,6 +26,9 @@ use log::*;
 mod led;
 use led::*;
 
+mod mcp3002;
+use mcp3002::*;
+
 mod ms5607;
 use ms5607::*;
 
@@ -41,27 +44,37 @@ fn main() {
     // test configuration file
     let mut config: Config = Config::new(CONFIG_FILE);
     match config.open() {
-        Ok(()) => println!("{:?}", config),
+        Ok(()) => println!("{}", config.id),
         Err(e) => { println!("Error: {}", e); std::process::exit(1); },
     };
 
     
     // test gps
     let mut gps: GPS =  GPS::new(&config.gps_serial_port, config.gps_speed);
-    //gps.config(GPS_PORT_SETTINGS);
-    gps.config();
-   
-    gps.update();
-    println!("{}", if gps.sats >=4 { "GPS FIX OK" } else { "NO GPS FIX" });
-    println!("{}N, {}W", gps.decimal_latitude(), gps.decimal_longitude());
+    gps.config().unwrap();
+    match gps.update() {
+        Ok(()) => {
+            println!("{}", if gps.sats >=4 { "GPS FIX OK" } else { "NO GPS FIX" });
+            println!("{}N, {}W", gps.decimal_latitude(), gps.decimal_longitude());
+        },
+        Err(e) => match e.error_type {
+            GpsErrorType::Sats => println!("GPS: No hay suficientes sats"),
+            GpsErrorType::GGA => println!("GPS: Error en la sentencia GGA"),
+            GpsErrorType::RMC => println!("GPS: Error en la sentencia RMC"),
+            GpsErrorType::Fix => println!("GPS: Error con el Fix"),
+            GpsErrorType::Parse => println!("GPS: Error parseando los datos"),
+            _ => {},
+        }
 
-    // test Image
-    let mut img: Image = Image::new(0, "ssdv", "/home/pi");
-    match img.capture() {
-        Ok(()) => println!("Capturada imagen {}", img.filename),
-        Err(e) => println!("Error tomando foto {}", e),
-    };
-
+    }
+//
+//    // test Image
+//    let mut img: Image = Image::new(0, "ssdv", "/home/pi");
+//    match img.capture() {
+//        Ok(()) => println!("Capturada imagen {}", img.filename),
+//        Err(e) => println!("Error tomando foto {}", e),
+//    };
+//
     // test LoRa
     let mut lora: RF95 = RF95::new(config.lora_cs, config.lora_int_pin);
     if lora.init() {
@@ -100,6 +113,20 @@ fn main() {
     }
     led.blink();
     led.err();
+
+    // test mcp3002
+    let mut mcp3002: Mcp3002 = Mcp3002::new(config.adc_cs, 0);
+    mcp3002.init();
+    match mcp3002.read(1) {
+        Ok(n) => println!("ADC channel 1: {}", n),
+        Err(e) => println!("Error reading ADC: {}", e),
+    }
+    
+
+    let mut baro : Ms5607 =  Ms5607::new(config.baro_i2c_bus, config.baro_addr);
+    baro.read_prom().unwrap();
+    baro.update().unwrap();
+    println!("Baro : {} mBar", baro.get_pres().unwrap());
 
     std::process::exit(0);
 }
