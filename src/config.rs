@@ -35,8 +35,8 @@ pub struct Config {
     pub temp_internal_addr: String,
     pub temp_external_addr: String,
 
-    pub baro_i2c_bus: u32,
-    pub baro_addr: String,
+    pub baro_i2c_bus: u8,
+    pub baro_addr: u16,
 
     pub path_main_dir: String,
     pub path_images_dir: String,
@@ -80,7 +80,7 @@ impl Config {
             temp_external_addr: "".to_string(),
 
             baro_i2c_bus: 0,
-            baro_addr: "".to_string(),
+            baro_addr: 0,
 
             path_main_dir: "".to_string(),
             path_images_dir: "".to_string(),
@@ -166,8 +166,9 @@ impl Config {
             None => return Err(Error::new(ErrorKind::Other, "Section baro not found")),
         };
 
-        self.baro_i2c_bus = section_baro.get("i2c_bus").unwrap().parse::<u32>().unwrap();
-        self.baro_addr = section_baro.get("i2c_addr").unwrap().to_string();
+        self.baro_i2c_bus = section_baro.get("i2c_bus").unwrap().parse::<u8>().unwrap();
+        // convert from hex
+        self.baro_addr = u16::from_str_radix(section_baro.get("i2c_addr").unwrap().trim_left_matches("0x"), 16).unwrap();
 
         // get path section
         let section_path = match conf.section(Some("paths".to_owned())) {
