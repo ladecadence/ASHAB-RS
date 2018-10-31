@@ -1,6 +1,5 @@
 extern crate spidev;
 use spidev::{Spidev, SpidevOptions, SpidevTransfer, SPI_MODE_0};
-use std::io::prelude::*;
 
 #[allow(dead_code)]
 pub struct Mcp3002 {
@@ -40,8 +39,8 @@ impl Mcp3002 {
         let mut rx_buf = [0_u8; 3];
 
         {
-        let mut transfer = SpidevTransfer::read_write(&tx_buf, &mut rx_buf);
-        self.spidev.transfer(&mut transfer);
+            let mut transfer = SpidevTransfer::read_write(&tx_buf, &mut rx_buf);
+            self.spidev.transfer(&mut transfer).unwrap();
         }
 
         let mut result: u32 = (rx_buf[0] as u32 & 0x01) << 9;
