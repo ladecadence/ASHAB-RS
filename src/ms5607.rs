@@ -1,6 +1,6 @@
 pub extern crate i2cdev;
 use i2cdev::core::*;
-use i2cdev::linux::{LinuxI2CDevice, LinuxI2CError};
+use i2cdev::linux::{LinuxI2CDevice, };
 
 use std::thread;
 use std::time::Duration;
@@ -56,8 +56,6 @@ impl Ms5607 {
     }
 
     pub fn read_adc(&mut self, cmd: u8) -> Result<i64, &'static str> {
-        let mut value: i64 = 0;
-
     
         self.bus.smbus_write_byte_data(MS5607_CMD_ADC_CONV+cmd, 0).unwrap();
 
@@ -75,7 +73,7 @@ impl Ms5607 {
         
         self.bus.read(&mut data).unwrap();
        
-        value = ((data[0] as i64) << 16) + ((data[1] as i64) << 8) + data[2] as i64;
+        let value: i64 = ((data[0] as i64) << 16) + ((data[1] as i64) << 8) + data[2] as i64;
 
         Ok(value)
     }
