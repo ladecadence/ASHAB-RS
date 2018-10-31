@@ -76,21 +76,21 @@ fn main() {
 //    };
 //
     // test LoRa
-    let mut lora: RF95 = RF95::new(config.lora_cs, config.lora_int_pin);
-    if lora.init() {
-        println!("LoRa init ok");
-    }
-    else {
-        println!("ERROR: LoRa not found");
-        std::process::exit(1);
+    let mut lora: RF95 = RF95::new(config.lora_cs, config.lora_int_pin, false);
+    match lora.init() {
+        Ok(()) => println!("LoRa init ok"),
+        Err(e) => { 
+            println!("ERROR: {}", e);
+            std::process::exit(1);
+        },
     }
 
-    //lora.set_frequency(868.5);
-    //lora.set_tx_power(5);
+    lora.set_frequency(868.5);
+    lora.set_tx_power(5);
 
-    //println!("Sending...");
-    //lora.send("$$TELEMETRY TEST".as_bytes());
-    //lora.wait_packet_sent();
+    println!("Sending...");
+    lora.send("$$TELEMETRY TEST".as_bytes());
+    lora.wait_packet_sent();
 
     // test temperature sensor
     let mut temp_sensor: DS18B20 = DS18B20::new(&config.temp_external_addr);
