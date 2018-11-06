@@ -35,6 +35,9 @@ use ms5607::*;
 mod telemetry;
 use telemetry::*;
 
+mod ssdv;
+use ssdv::*;
+
 // CONFIGURATION
 /////////////////
 
