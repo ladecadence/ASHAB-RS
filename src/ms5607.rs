@@ -56,9 +56,15 @@ impl Ms5607 {
     }
 
     pub fn read_adc(&mut self, cmd: u8) -> Result<i64, &'static str> {
+<<<<<<< HEAD
+        
+        // start conversion
+=======
     
+>>>>>>> 0d5ae64b2b2376078d10aa1f6948c061015fc6a4
         self.bus.smbus_write_byte_data(MS5607_CMD_ADC_CONV+cmd, 0).unwrap();
 
+        // wait for ADC
         match cmd & 0x0f {
             MS5607_CMD_ADC_256 => thread::sleep(Duration::from_millis(1)),
             MS5607_CMD_ADC_512 => thread::sleep(Duration::from_millis(3)),
@@ -68,6 +74,7 @@ impl Ms5607 {
             _ => thread::sleep(Duration::from_millis(10)),
         }
 
+        // read result bytes and create converted value
         let mut data: [u8; 3] = [0, 0, 0];
         self.bus.write(&[MS5607_CMD_ADC_READ]).unwrap();
         
