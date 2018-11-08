@@ -73,14 +73,33 @@ fn main() {
         }
 
     }
-//
-//    // test Image
-//    let mut img: Image = Image::new(0, "ssdv", "/home/pi");
-//    match img.capture() {
-//        Ok(()) => println!("Capturada imagen {}", img.filename),
-//        Err(e) => println!("Error tomando foto {}", e),
-//    };
-//
+
+    // test Image
+    let mut img: Image = Image::new(
+    	0, 
+    	"ssdv", 
+    	&(config.path_main_dir.clone() + &config.path_images_dir.clone())
+	);
+
+    match img.capture() {
+        Ok(()) => println!("Capturada imagen {}", img.filename),
+        Err(e) => println!("Error tomando foto {}", e),
+    };
+
+    // test ssdv
+    let mut ssdv: SSDV = SSDV::new(
+    			img.filename,
+			config.path_main_dir.clone() 
+				+ &config.path_images_dir.clone(),
+			config.ssdv_name,
+			config.id.clone(),
+			0
+			);
+    match ssdv.encode() {
+        Ok(()) => println!("Encodeado SSDV {}", ssdv.binaryname),
+	Err(e) => println!("Error encodeando SSDV: {}", e),
+    };
+
     // test LoRa
     let mut lora: RF95 = RF95::new(config.lora_cs, config.lora_int_pin, false);
     match lora.init() {

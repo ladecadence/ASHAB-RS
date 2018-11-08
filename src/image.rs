@@ -19,7 +19,7 @@ impl Image {
     pub fn new(num: u32, name: &str, p: &str) -> Image {
         Image {
             number : num,
-            filename : String::from(p) + "/" 
+            filename : String::from(p) 
                 + name.clone() 
                 + &num.to_string() 
                 + ".jpg",
@@ -30,7 +30,7 @@ impl Image {
 
     fn update_name(&mut self) {
         // update name with pic number and current time
-        self.filename = self.path.clone() + "/" + &self.basename
+        self.filename = self.path.clone() + &self.basename
             + "-" + &Utc::now().to_rfc3339().to_string() 
             + "-" + &self.number.to_string() + ".jpg";
     }

@@ -1,5 +1,4 @@
 use std::process::Command;
-use std::path::MAIN_SEPARATOR;
 
 static SSDV_PROGRAM: &'static str = "ssdv";
 
@@ -7,25 +6,20 @@ pub struct SSDV {
     pub image_file: String,
     pub id: String,
     pub count: u8,
-    path: String,
     filename: String,
-    binaryname: String,
+    path: String,
+    pub binaryname: String,
 }
 
 impl SSDV {
-    pub fn new (img: String, pth: String, i: String, cnt: u8) -> SSDV {
+    pub fn new (img: String, p: String, b: String, i: String, cnt: u8) -> SSDV {
         SSDV {
             image_file : img.clone(),
             id : i,
+	    path: p.clone(),
             count : cnt,
-            path : pth.clone(),
-            filename : pth.clone() 
-                + &MAIN_SEPARATOR.to_string() 
-                + &img.clone(),
-            binaryname: pth 
-                + &MAIN_SEPARATOR.to_string() 
-                + &img.clone() 
-                + ".bin",
+            filename : img.clone(), 
+            binaryname: p.clone() + &b + ".bin",
         }
     }
 
