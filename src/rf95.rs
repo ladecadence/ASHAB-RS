@@ -262,10 +262,11 @@ impl RF95 {
             int_pin_number: int,
             spidev: Spidev::open(String::from("/dev/spidev0.") 
                                  + &ch.to_string()).unwrap(),
-            int_pin: Pin::new(int as u64),
-            use_int: use_i,
-            int_thread: thread::Builder::new().name("rf95_int".into()),
-            cad: 0,
+                                 int_pin: Pin::new(int as u64),
+                                 use_int: use_i,
+                                 int_thread: thread::Builder::new()
+                                     .name("rf95_int".into()),
+                                 cad: 0,
         }
     }
 
@@ -296,7 +297,7 @@ impl RF95 {
         // fill tx buf
         let mut tx: Vec<u8> = Vec::new();
         tx.push(reg | SPI_WRITE_MASK);
-        
+
         tx.extend(data.iter().cloned());
 
         self.spidev.write(&tx).unwrap();
@@ -391,7 +392,7 @@ impl RF95 {
 
     pub fn set_tx_power(&mut self, p: u8) {
         let mut power = p;
-        
+
         // bounds
         if power > 23 {
             power = 23;
@@ -464,25 +465,25 @@ impl RF95 {
         self.spi_write(REG_22_PAYLOAD_LENGTH, data.len() as u8);
 
         self.set_mode_tx();
-        
+
         true
     }
 
     pub fn wait_packet_sent(&mut self) -> bool {
         if !self.use_int {
-            
+
             // If we are not currently in transmit mode, 
             // there is no packet to wait for
             if self.mode != RADIO_MODE_TX {
                 return false;
             }
-            
+
             while (self.spi_read(REG_12_IRQ_FLAGS) & TX_DONE ) == 0 {
                 thread::sleep(time::Duration::from_millis(10));
             }
-            
+
             self.tx_good = self.tx_good + 1;
-            
+
             // clear IRQ flags
             self.spi_write(REG_12_IRQ_FLAGS, 0xff);
 
@@ -506,10 +507,10 @@ impl RF95 {
             let irq_flags = self.spi_read(REG_12_IRQ_FLAGS);
 
             if (self.mode == RADIO_MODE_RX) && (irq_flags & RX_DONE != 0) {
-            
+
                 // Have received a packet
                 let length = self.spi_read(REG_13_RX_NB_BYTES);
-                
+
                 // Reset the fifo read ptr to the beginning of the packet
                 let ptr = self.spi_read(REG_10_FIFO_RX_CURRENT_ADDR);
                 self.spi_write(REG_0D_FIFO_ADDR_PTR, ptr);
@@ -517,13 +518,13 @@ impl RF95 {
                 self.buflen = length;
                 // clear IRQ flags
                 self.spi_write(REG_12_IRQ_FLAGS, 0xff);
-                
+
                 // Remember the RSSI of this packet
                 // this is according to the doc, but is it really correct?
                 // weakest receiveable signals are reported RSSI at about -66
                 self.last_rssi = (self.spi_read(REG_1A_PKT_RSSI_VALUE) as i16)
                     - 137;
-                
+
                 // We have received a message.
                 // validateRxBuf();  TO BE IMPLEMENTED
                 self.rx_good = self.rx_good + 1;
@@ -534,12 +535,12 @@ impl RF95 {
             } else if (self.mode == RADIO_MODE_CAD) 
                 && (irq_flags & CAD_DONE != 0) {
 
-                self.cad = irq_flags & CAD_DETECTED;
-                self.set_mode_idle();
-            }
+                    self.cad = irq_flags & CAD_DETECTED;
+                    self.set_mode_idle();
+                }
 
             self.spi_write(REG_12_IRQ_FLAGS, 0xff); // Clear all IRQ flags
-            
+
             if self.mode == RADIO_MODE_TX {
                 return Err("Radio in TX mode");
             }

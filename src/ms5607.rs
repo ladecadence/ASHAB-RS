@@ -72,9 +72,9 @@ impl Ms5607 {
         // read result bytes and create converted value
         let mut data: [u8; 3] = [0, 0, 0];
         self.bus.write(&[MS5607_CMD_ADC_READ]).unwrap();
-        
+
         self.bus.read(&mut data).unwrap();
-       
+
         let value: i64 = ((data[0] as i64) << 16) 
             + ((data[1] as i64) << 8) 
             + data[2] as i64;
@@ -97,7 +97,7 @@ impl Ms5607 {
             + dt * self.prom[3] as i64 /(2_i64.pow(7));
         self.temp = 2000 + (dt * self.prom[6] as i64 ) / (2_i64.pow(23));
         self.p = ((d1*sens) / (2_i64.pow(21)) - off) / (2_i64.pow(15));
-        
+
         let mut t2: i64 = 0;
         let mut off2: i64 = 0;
         let mut sens2: i64 = 0;

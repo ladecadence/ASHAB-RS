@@ -54,7 +54,7 @@ fn main() {
         Err(e) => { println!("Error: {}", e); std::process::exit(1); },
     };
 
-    
+
     // test gps
     let mut gps: GPS =  GPS::new(&config.gps_serial_port, config.gps_speed);
     gps.config().unwrap();
@@ -128,7 +128,7 @@ fn main() {
         Ok(n) => println!("ADC channel 1: {}", n),
         Err(e) => println!("Error reading ADC: {}", e),
     }
-    
+
     // test baro
     let mut baro : Ms5607 =  Ms5607::new(config.baro_i2c_bus, config.baro_addr);
     baro.read_prom().unwrap();
@@ -137,10 +137,10 @@ fn main() {
 
     // test telemetry
     let mut telem: Telemetry = Telemetry::new(config.id, 
-    						config.msg, 
-						config.separator);
+                            config.msg, 
+                        config.separator);
     telem.update(4807.038, 'N', 1131.000, 'E', 123.0, 80.2, 1.5, 
-		4, 6.98, 1004.6, 25.3, 12.6, 0.9);     			
+        4, 6.98, 1004.6, 25.3, 12.6, 0.9);     			
 
     println!("Telemetry: ");
     println!("{}", telem.aprs_string());

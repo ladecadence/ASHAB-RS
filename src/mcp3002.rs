@@ -22,10 +22,10 @@ impl Mcp3002 {
     pub fn init(&mut self) {
         // configure SPI
         let options = SpidevOptions::new()
-                            .bits_per_word(8)
-                            .max_speed_hz(488000)
-                            .mode(SPI_MODE_0)
-                            .build();
+            .bits_per_word(8)
+            .max_speed_hz(488000)
+            .mode(SPI_MODE_0)
+            .build();
         self.spidev.configure(&options).unwrap();
     }
 
