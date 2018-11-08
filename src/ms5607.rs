@@ -75,21 +75,28 @@ impl Ms5607 {
         
         self.bus.read(&mut data).unwrap();
        
-        let value: i64 = ((data[0] as i64) << 16) + ((data[1] as i64) << 8) + data[2] as i64;
+        let value: i64 = ((data[0] as i64) << 16) 
+            + ((data[1] as i64) << 8) 
+            + data[2] as i64;
 
         Ok(value)
     }
 
     pub fn update(&mut self) -> Result<(), &'static str> {
-        let d2: i64 = self.read_adc(MS5607_CMD_ADC_D2+MS5607_CMD_ADC_4096).unwrap();
-        let d1: i64 = self.read_adc(MS5607_CMD_ADC_D1+MS5607_CMD_ADC_4096).unwrap();
+        let d2: i64 = self.read_adc(MS5607_CMD_ADC_D2+MS5607_CMD_ADC_4096)
+            .unwrap();
+        let d1: i64 = self.read_adc(MS5607_CMD_ADC_D1+MS5607_CMD_ADC_4096)
+            .unwrap();
 
-        // calculate 1st order pressure and temperature (MS5607 1st order algorithm)
+        // calculate 1st order pressure and temperature 
+        // (MS5607 1st order algorithm)
         let dt: i64 = d2 - self.prom[5] as i64 * (2_i64.pow(8));
-        let mut off: i64  = self.prom[2] as i64 * (2_i64.pow(17))+dt*self.prom[4] as i64 /(2_i64.pow(6));
-        let mut sens: i64 = self.prom[1] as i64 * (2_i64.pow(16))+dt*self.prom[3] as i64 /(2_i64.pow(7));
-        self.temp = 2000 + (dt * self.prom[6] as i64 )/(2_i64.pow(23));
-        self.p = ((d1*sens)/(2_i64.pow(21))-off)/(2_i64.pow(15));
+        let mut off: i64  = self.prom[2] as i64 * (2_i64.pow(17))
+            + dt * self.prom[4] as i64 /(2_i64.pow(6));
+        let mut sens: i64 = self.prom[1] as i64 * (2_i64.pow(16))
+            + dt * self.prom[3] as i64 /(2_i64.pow(7));
+        self.temp = 2000 + (dt * self.prom[6] as i64 ) / (2_i64.pow(23));
+        self.p = ((d1*sens) / (2_i64.pow(21)) - off) / (2_i64.pow(15));
         
         let mut t2: i64 = 0;
         let mut off2: i64 = 0;

@@ -11,7 +11,10 @@ impl Mcp3002 {
     pub fn new(cs: u8, ch: u8) -> Mcp3002 {
         Mcp3002 {
             csel: cs,
-            spidev: Spidev::open(String::from("/dev/spidev")+ &ch.to_string() + &"." + &cs.to_string()).unwrap(),
+            spidev: Spidev::open(String::from("/dev/spidev")
+                                 + &ch.to_string() 
+                                 + &"." 
+                                 + &cs.to_string()).unwrap(),
         }
     }
 

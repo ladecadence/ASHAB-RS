@@ -210,10 +210,10 @@ const PA_DAC_ENABLE: u8 = 0x07;
 const MAX_MESSAGE_LEN: u8 = 255;
 
 // default params;
-const BW125_CR45_SF128 : (u8, u8, u8) =  (0x72,   0x74,    0x00);
-const BW500_CR45_SF128 : (u8, u8, u8) =  (0x92,   0x74,    0x00);
-const BW31_25_CR48_SF512 : (u8, u8, u8) =  (0x48,   0x94,    0x00);
-const BW125_CR48_SF4096 : (u8, u8, u8) =  (0x78,   0xc4,    0x00);
+const BW125_CR45_SF128 : (u8, u8, u8) =  (0x72, 0x74, 0x00);
+const BW500_CR45_SF128 : (u8, u8, u8) =  (0x92, 0x74, 0x00);
+const BW31_25_CR48_SF512 : (u8, u8, u8) =  (0x48, 0x94, 0x00);
+const BW125_CR48_SF4096 : (u8, u8, u8) =  (0x78, 0xc4, 0x00);
 
 // SPI;
 const SPI_WRITE_MASK: u8 = 0x80;
@@ -260,7 +260,8 @@ impl RF95 {
             rx_buf_valid: false,
             channel: ch,
             int_pin_number: int,
-            spidev: Spidev::open(String::from("/dev/spidev0.") + &ch.to_string()).unwrap(),
+            spidev: Spidev::open(String::from("/dev/spidev0.") 
+                                 + &ch.to_string()).unwrap(),
             int_pin: Pin::new(int as u64),
             use_int: use_i,
             int_thread: thread::Builder::new().name("rf95_int".into()),
@@ -422,9 +423,15 @@ impl RF95 {
         self.spi_write(REG_26_MODEM_CONFIG3, mode.2);
     }
 
-    pub fn set_modem_config_custom(&mut self, bandwidth: u8, coding_rate: u8, 
-                                   implicit_header: u8, spreading_factor: u8, crc: u8, 
-                                   continuous_tx: u8, timeout: u8, agc_auto: u8) {
+    pub fn set_modem_config_custom(&mut self, bandwidth: u8, 
+                                   coding_rate: u8, 
+                                   implicit_header: u8, 
+                                   spreading_factor: u8, 
+                                   crc: u8,
+                                   continuous_tx: u8, 
+                                   timeout: u8, 
+                                   agc_auto: u8) {
+
         self.spi_write(REG_1D_MODEM_CONFIG1, 
                        bandwidth | coding_rate | implicit_header);
         self.spi_write(REG_1E_MODEM_CONFIG2,
@@ -464,7 +471,8 @@ impl RF95 {
     pub fn wait_packet_sent(&mut self) -> bool {
         if !self.use_int {
             
-            // If we are not currently in transmit mode, there is no packet to wait for
+            // If we are not currently in transmit mode, 
+            // there is no packet to wait for
             if self.mode != RADIO_MODE_TX {
                 return false;
             }
@@ -513,7 +521,8 @@ impl RF95 {
                 // Remember the RSSI of this packet
                 // this is according to the doc, but is it really correct?
                 // weakest receiveable signals are reported RSSI at about -66
-                self.last_rssi = (self.spi_read(REG_1A_PKT_RSSI_VALUE) as i16) - 137;
+                self.last_rssi = (self.spi_read(REG_1A_PKT_RSSI_VALUE) as i16)
+                    - 137;
                 
                 // We have received a message.
                 // validateRxBuf();  TO BE IMPLEMENTED
@@ -522,7 +531,9 @@ impl RF95 {
                 if self.rx_buf_valid {
                     self.set_mode_idle();
                 }
-            } else if (self.mode == RADIO_MODE_CAD) && (irq_flags & CAD_DONE != 0) {
+            } else if (self.mode == RADIO_MODE_CAD) 
+                && (irq_flags & CAD_DONE != 0) {
+
                 self.cad = irq_flags & CAD_DETECTED;
                 self.set_mode_idle();
             }
@@ -549,7 +560,4 @@ impl RF95 {
 
 
 }
-
-
-
 

@@ -87,14 +87,14 @@ impl GPS {
         }
     }
 
-    pub fn config(&mut self) -> Result<(), GpsError> { //, settings: serial::PortSettings) {
+    pub fn config(&mut self) -> Result<(), GpsError> { 
         match self.port.as_ref() {
             Err(_e) => return Err(GpsError::new(GpsErrorType::Open)),
             Ok(_) => {}
         }
         self.port.as_mut().unwrap().configure(&self.settings).unwrap();
-        self.port.as_mut().unwrap().set_timeout(Duration::from_millis(1000)).unwrap();
-
+        self.port.as_mut().unwrap().set_timeout(Duration::from_millis(1000))
+            .unwrap();
         Ok(())
     }   
 
@@ -103,7 +103,10 @@ impl GPS {
 
         // Get GGA line
         self.line_gga.clear();
-        let mut is_gga: String = self.line_gga.chars().skip(3).take(3).collect();
+        let mut is_gga: String = self.line_gga.chars()
+            .skip(3)
+            .take(3)
+            .collect();
         while is_gga != "GGA".to_string() {
             self.line_gga.clear();
             match reader.read_line(&mut self.line_gga) {
@@ -116,7 +119,10 @@ impl GPS {
 
         // and get RMC line
         self.line_rmc.clear();
-        let mut is_rmc: String = self.line_rmc.chars().skip(3).take(3).collect();
+        let mut is_rmc: String = self.line_rmc.chars()
+            .skip(3)
+            .take(3)
+            .collect();
         while is_rmc != "RMC".to_string() {
             self.line_rmc.clear();
             match reader.read_line(&mut self.line_rmc) {
@@ -138,7 +144,10 @@ impl GPS {
             match gga_data[FIELD_SATS].parse::<u8>()
             {
                 Ok(x) => self.sats = x,
-                _ => { self.sats = 0; return Err(GpsError::new(GpsErrorType::Fix)) }
+                _ => { 
+                    self.sats = 0; 
+                    return Err(GpsError::new(GpsErrorType::Fix)) 
+                }
             }
             if self.sats < MIN_SATS {
                 return Err(GpsError::new(GpsErrorType::Sats));

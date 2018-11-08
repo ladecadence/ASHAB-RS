@@ -19,8 +19,13 @@ impl SSDV {
 			id : i,
 			count : cnt,
 			path : pth.clone(),
-			filename : pth.clone() + &MAIN_SEPARATOR.to_string() + &img.clone(),
-			binaryname: pth + &MAIN_SEPARATOR.to_string() + &img.clone() + ".bin",
+			filename : pth.clone() 
+                + &MAIN_SEPARATOR.to_string() 
+                + &img.clone(),
+			binaryname: pth 
+                + &MAIN_SEPARATOR.to_string() 
+                + &img.clone() 
+                + ".bin",
 		}
 	}
 

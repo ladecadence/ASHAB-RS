@@ -108,7 +108,8 @@ fn main() {
     log.init();
     log.log(LogType::Info, "Probando Log");
     log.log(LogType::Warn, "Advertencia!!!");
-    log.log(LogType::Data, &format!("External temperature: {}", temp_sensor.read().unwrap()));
+    log.log(LogType::Data, 
+            &format!("External temperature: {}", temp_sensor.read().unwrap()));
     log.log(LogType::Error, "Vamos a morir!");
 
     // test led
