@@ -53,7 +53,7 @@ impl Image {
 			Err(e) => { 
 				println!("{}", e); 
 				return Err(Error::new(
-				ErrorKind::NotFound, "raspistill failed")
+    				ErrorKind::NotFound, "raspistill failed")
 				) 
 			}
 		}
@@ -66,8 +66,7 @@ impl Image {
 		}
 		
 		// exit code was not 0
-		Err(Error::new(ErrorKind::NotFound, "Can't take picture"))
-		
+		Err(Error::new(ErrorKind::NotFound, "Can't take picture"))	
 	}
 }
 		

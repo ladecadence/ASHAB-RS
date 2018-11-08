@@ -96,186 +96,186 @@ impl Config {
         let conf = match Ini::load_from_file(&self.file) {
             Ok(c) => c,
             Err(_e) => return Err(Error::new(
-	    	ErrorKind::NotFound, 
-		"Can't open config file")
-		),
+	    	    ErrorKind::NotFound, 
+        		"Can't open config file")
+		    ),
         };
         // get mission section
         let section_mission = match conf.section(Some("mission".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section mission not found")
-		),
+	    	    ErrorKind::Other, 
+        		"Section mission not found")
+		    ),
         };
 
         self.id = section_mission.get("id").unwrap().to_string();
         self.subid = section_mission.get("subid").unwrap().to_string();
         self.msg = section_mission.get("msg").unwrap().to_string();
         self.separator = section_mission.get("separator")
-		.unwrap()
-		.to_string();
+		    .unwrap()
+		    .to_string();
         self.packet_repeat = section_mission.get("packet_repeat")
-		.unwrap()
-		.parse::<u32>()
-		.unwrap();
+    		.unwrap()
+	    	.parse::<u32>()
+		    .unwrap();
         self.packet_delay = section_mission.get("packet_delay")
-		.unwrap()
-		.parse::<u32>()
-		.unwrap();
+    		.unwrap()
+    		.parse::<u32>()
+    		.unwrap();
         
         // get gpio section
         let section_gpio = match conf.section(Some("gpio".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section gpio not found")
-		),
+	    	    ErrorKind::Other, 
+        		"Section gpio not found")
+		    ),
         };
 
         self.batt_enable_pin = section_gpio.get("batt_enable_pin")
-		.unwrap()
-		.parse::<u8>()
-		.unwrap();
+    		.unwrap()
+    		.parse::<u8>()
+    		.unwrap();
         self.led_pin = section_gpio.get("led_pin")
-		.unwrap()
-		.parse::<u8>()
-		.unwrap();
+	    	.unwrap()
+    		.parse::<u8>()
+    		.unwrap();
 
         // get gps section
         let section_gps = match conf.section(Some("gps".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section gps not found")
-		),
+	        	ErrorKind::Other, 
+		        "Section gps not found")
+        	),
         };
 
         self.gps_serial_port = section_gps.get("serial_port")
-		.unwrap()
-		.to_string();
+		    .unwrap()
+    		.to_string();
         self.gps_speed = section_gps.get("speed")
-		.unwrap()
-		.parse::<u32>()
-		.unwrap();
+	    	.unwrap()
+    		.parse::<u32>()
+	    	.unwrap();
 
         // get lora section
         let section_lora = match conf.section(Some("lora".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section lora not found")
-		),
+	        	ErrorKind::Other, 
+    		"Section lora not found")
+	    	),
         };
 
         self.lora_cs = section_lora.get("cs")
-		.unwrap()
-		.parse::<u8>()
-		.unwrap();
+		    .unwrap()
+    		.parse::<u8>()
+    		.unwrap();
         self.lora_int_pin = section_lora.get("int_pin")
-		.unwrap()
-		.parse::<u8>()
-		.unwrap();
+	    	.unwrap()
+    		.parse::<u8>()
+    		.unwrap();
         self.lora_freq = section_lora.get("freq")
-		.unwrap()
-		.parse::<f32>()
-		.unwrap();
+	    	.unwrap()
+		    .parse::<f32>()
+    		.unwrap();
         self.lora_low_pwr = section_lora.get("low_pwr")
-		.unwrap()
-		.parse::<u32>()
-		.unwrap();
+	    	.unwrap()
+		    .parse::<u32>()
+    		.unwrap();
         self.lora_high_pwr = section_lora.get("high_pwr")
-		.unwrap()
-		.parse::<u32>()
-		.unwrap();
+	    	.unwrap()
+    		.parse::<u32>()
+	    	.unwrap();
 
         // get adc section
         let section_adc = match conf.section(Some("adc".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section adc not found")
-		),
+	        	ErrorKind::Other, 
+    	    	"Section adc not found")
+	    	),
         };
 
         self.adc_cs = section_adc.get("cs")
-		.unwrap()
-		.parse::<u8>()
-		.unwrap();
+    		.unwrap()
+    		.parse::<u8>()
+    		.unwrap();
         self.adc_vbatt = section_adc.get("vbatt")
-		.unwrap()
-		.parse::<u32>()
-		.unwrap();
+    		.unwrap()
+    		.parse::<u32>()
+    		.unwrap();
         self.adc_v_divider = section_adc.get("v_divider")
-		.unwrap()
-		.parse::<f32>()
-		.unwrap();
+	    	.unwrap()
+    		.parse::<f32>()
+    		.unwrap();
         self.adc_v_mult = section_adc.get("v_mult")
-		.unwrap()
-		.parse::<u32>()
-		.unwrap();
+	    	.unwrap()
+		    .parse::<u32>()
+    		.unwrap();
 
         // get temp section
         let section_temp = match conf.section(Some("temp".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section temp not found")
-		),
+	        	ErrorKind::Other, 
+	        	"Section temp not found")
+	    	),
         };
 
         self.temp_internal_addr = section_temp.get("internal_addr")
-		.unwrap()
-		.to_string();
+    		.unwrap()
+    		.to_string();
         self.temp_external_addr = section_temp.get("external_addr")
-		.unwrap()
-		.to_string();
+	    	.unwrap()
+	    	.to_string();
 
         // get baro section
         let section_baro = match conf.section(Some("baro".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section baro not found")
-		),
+	        	ErrorKind::Other, 
+        		"Section baro not found")
+    		),
         };
 
         self.baro_i2c_bus = section_baro.get("i2c_bus")
-		.unwrap()
-		.parse::<u8>()
-		.unwrap();
+	    	.unwrap()
+	    	.parse::<u8>()
+	    	.unwrap();
         // convert from hex
         self.baro_addr = u16::from_str_radix(section_baro.get("i2c_addr")
-			.unwrap()
-			.trim_left_matches("0x"), 16)
-		.unwrap();
+			    .unwrap()
+    			.trim_left_matches("0x"), 16)
+		    .unwrap();
 
         // get path section
         let section_path = match conf.section(Some("paths".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section paths not found")
-		),
+	        	ErrorKind::Other, 
+        		"Section paths not found")
+	    	),
         };
 
         self.path_main_dir = section_path.get("main_dir")
-		.unwrap()
-		.to_string();
+		    .unwrap()
+    		.to_string();
         self.path_images_dir = section_path.get("images_dir")
-		.unwrap()
-		.to_string();
+	    	.unwrap()
+    		.to_string();
         self.path_log = section_path.get("log")
-		.unwrap()
-		.to_string();
+	    	.unwrap()
+	    	.to_string();
 
         // get ssdv section
         let section_ssdv = match conf.section(Some("ssdv".to_owned())) {
             Some(s) => s,
             None => return Err(Error::new(
-	    	ErrorKind::Other, 
-		"Section ssdv not found")
-		),
+	        	ErrorKind::Other, 
+        		"Section ssdv not found")
+		    ),
         };
 
         self.ssdv_size = section_ssdv.get("size").unwrap().to_string();
