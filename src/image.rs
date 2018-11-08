@@ -19,7 +19,10 @@ impl Image {
 	pub fn new(num: u32, name: &str, p: &str) -> Image {
 		Image {
 			number : num,
-			filename : String::from(p) + "/" + name.clone() + &num.to_string() + ".jpg",
+			filename : String::from(p) + "/" 
+				+ name.clone() 
+				+ &num.to_string() 
+				+ ".jpg",
 			basename : String::from(name),
 			path : String::from(p),
 		}
@@ -47,10 +50,16 @@ impl Image {
 		let exit_code: i32;
 		match status {
 			Ok(s) => exit_code = s.code().unwrap(),
-			Err(e) => { println!("{}", e); return Err(Error::new(ErrorKind::NotFound, "raspistill failed")) }
+			Err(e) => { 
+				println!("{}", e); 
+				return Err(Error::new(
+				ErrorKind::NotFound, "raspistill failed")
+				) 
+			}
 		}
 		
-		// if we manage to capture a picture, increment filename number		
+		// if we manage to capture a picture, 
+		// increment filename number		
 		if exit_code == 0 {
 			self.number = self.number + 1;
 			return Ok(());
