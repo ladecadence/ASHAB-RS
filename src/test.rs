@@ -86,9 +86,16 @@ fn main() {
         Err(e) => println!("Error tomando foto {}", e),
     };
 
+    match img.resize(config.ssdv_name.clone(), config.ssdv_size.clone()) {
+        Ok(()) => println!("Redimensionada imagen."),
+        Err(e) => println!("Error redimensionando foto {}", e),
+    };
+
     // test ssdv
     let mut ssdv: SSDV = SSDV::new(
-    			img.filename,
+    		config.path_main_dir.clone()
+                + &config.path_images_dir.clone()
+                + &config.ssdv_name.clone(),
 			config.path_main_dir.clone() 
 				+ &config.path_images_dir.clone(),
 			config.ssdv_name,
@@ -97,25 +104,8 @@ fn main() {
 			);
     match ssdv.encode() {
         Ok(()) => println!("Encodeado SSDV {}", ssdv.binaryname),
-	Err(e) => println!("Error encodeando SSDV: {}", e),
+	    Err(e) => println!("Error encodeando SSDV: {}", e),
     };
-
-    // test LoRa
-    let mut lora: RF95 = RF95::new(config.lora_cs, config.lora_int_pin, false);
-    match lora.init() {
-        Ok(()) => println!("LoRa init ok"),
-        Err(e) => { 
-            println!("ERROR: {}", e);
-            std::process::exit(1);
-        },
-    }
-
-    lora.set_frequency(868.5);
-    lora.set_tx_power(5);
-
-    println!("Sending...");
-    lora.send("$$TELEMETRY TEST".as_bytes());
-    lora.wait_packet_sent();
 
     // test temperature sensor
     let mut temp_sensor: DS18B20 = DS18B20::new(&config.temp_external_addr);
@@ -164,6 +154,22 @@ fn main() {
     println!("Telemetry: ");
     println!("{}", telem.aprs_string());
 
+    // test LoRa
+    let mut lora: RF95 = RF95::new(config.lora_cs, config.lora_int_pin, false);
+    match lora.init() {
+        Ok(()) => println!("LoRa init ok"),
+        Err(e) => { 
+            println!("ERROR: {}", e);
+            std::process::exit(1);
+        },
+    }
+
+    lora.set_frequency(868.5);
+    lora.set_tx_power(5);
+
+    println!("Sending...");
+    lora.send(telem.aprs_string().as_bytes());
+    lora.wait_packet_sent();
 
     std::process::exit(0);
 }

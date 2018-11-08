@@ -5,6 +5,8 @@ extern crate chrono;
 use chrono::prelude::*;
 
 static STILL_PROGRAM: &'static str = "raspistill";
+static RESIZE_PROGRAM: &'static str = "convert";
+static MODIFY_PROGRAM: &'static str = "mogrify";
 
 #[allow(dead_code)]
 pub struct Image {
@@ -12,6 +14,7 @@ pub struct Image {
     pub basename: String,
     pub path: String,
     pub filename: String,
+    captured: bool,
 }
 
 #[allow(dead_code)]
@@ -25,6 +28,7 @@ impl Image {
                 + ".jpg",
             basename : String::from(name),
             path : String::from(p),
+            captured: false,
         }
     }
 
@@ -62,11 +66,45 @@ impl Image {
         // increment filename number		
         if exit_code == 0 {
             self.number = self.number + 1;
+            self.captured = true;
             return Ok(());
         }
 
         // exit code was not 0
         Err(Error::new(ErrorKind::NotFound, "Can't take picture"))	
     }
+
+    pub fn resize(&mut self, resized_name: String, new_size: String) -> Result<(), Error> {
+        // can't resize non existant picture
+        if !self.captured {
+            return Err(Error::new(ErrorKind::NotFound, "No picture available"));
+        }
+
+        let status = Command::new(RESIZE_PROGRAM)
+            .arg(&self.filename)
+            .arg("-resize")
+            .arg(&new_size)
+            .arg(&(self.path.clone() + &resized_name))
+            .status();
+        let exit_code: i32;
+        match status {
+            Ok(s) => exit_code = s.code().unwrap(),
+            Err(_e) => {
+                return Err(Error::new(
+                    ErrorKind::NotFound, "convert failed")
+                    )
+            }
+        }
+
+        // ok
+        if exit_code == 0 {
+            return Ok(());
+        }
+
+        // exit code was not 0
+        Err(Error::new(ErrorKind::NotFound, "Can't resize picture"))	
+    }
+ 
+
 }
 
