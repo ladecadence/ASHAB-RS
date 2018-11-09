@@ -14,8 +14,8 @@ use rusttype::{FontCollection, Scale};
 
 static STILL_PROGRAM: &'static str = "raspistill";
 
-const text_big: f32 = 12.0;
-const text_small: f32 = 8.0;
+const TEXT_BIG: f32 = 12.0;
+const TEXT_SMALL: f32 = 8.0;
 
 #[allow(dead_code)]
 pub struct Picture {
@@ -133,7 +133,7 @@ impl Picture {
         let font = Vec::from(include_bytes!("font.ttf") as &[u8]);
         let font = FontCollection::from_bytes(font).unwrap().into_font().unwrap();
 
-        let scale = Scale { x: text_big * 2.0, y: text_big };
+        let scale = Scale { x: TEXT_BIG * 2.0, y: TEXT_BIG };
         draw_text_mut(&mut image, 
             Rgba([0u8, 0u8, 0u8, 255u8]), 
             10, 
@@ -149,7 +149,7 @@ impl Picture {
             &font, 
             &format!("{}{}", &id, &subid));
         
-        let scale = Scale { x: text_small, y: text_small };
+        let scale = Scale { x: TEXT_SMALL, y: TEXT_SMALL };
         draw_text_mut(&mut image, 
             Rgba([0u8, 0u8, 0u8, 0u8]), 
             10, 
