@@ -8,8 +8,8 @@ extern crate ini;
 mod gps;
 use gps::*;
 
-mod image;
-use image::*;
+mod picture;
+use picture::*;
 
 mod rf95;
 use rf95::*;
@@ -74,22 +74,33 @@ fn main() {
 
     }
 
-    // test Image
-    let mut img: Image = Image::new(
+    // test Picture 
+    let mut pic: Picture = Picture::new(
     	0, 
     	"ssdv", 
     	&(config.path_main_dir.clone() + &config.path_images_dir.clone())
 	);
 
-    match img.capture() {
-        Ok(()) => println!("Capturada imagen {}", img.filename),
+    match pic.capture() {
+        Ok(()) => println!("Capturada imagen {}", pic.filename),
         Err(e) => println!("Error tomando foto {}", e),
     };
 
-    match img.resize(config.ssdv_name.clone(), config.ssdv_size.clone()) {
+    match pic.resize(config.ssdv_name.clone(), config.ssdv_size.clone()) {
         Ok(()) => println!("Redimensionada imagen."),
         Err(e) => println!("Error redimensionando foto {}", e),
     };
+
+    match pic.add_info(config.path_main_dir.clone()
+                        + &config.path_images_dir.clone()
+                        + &config.ssdv_name.clone(),
+                    config.id.clone(),
+                    config.subid.clone(),
+                    config.msg.clone(),
+                    ) {
+        Ok(()) => println!("Modificada imagen."),
+        Err(e) => println!("Error modificando foto {}", e),
+    }
 
     // test ssdv
     let mut ssdv: SSDV = SSDV::new(

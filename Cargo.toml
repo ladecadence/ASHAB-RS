@@ -1,16 +1,16 @@
 [package]
-name = "ashab_gps"
+name = "ashab_nsx"
 version = "0.1.0"
 authors = ["David Pello <dpello@ladecadence.net>"]
 
 [dependencies]
+image = "0.20.1"
 serial = "0.3.4"
 spidev = "0.3.0"
 sysfs_gpio = "0.4.4"
 i2cdev = "0.4.0"
 chrono = "0.4"
 rust-ini = "0.13"
-
 
 [[bin]]
 name = "test"

@@ -1,15 +1,19 @@
 use std::process::Command;
 use std::io::{Error, ErrorKind};
+use std::ffi::OsStr;
 
 extern crate chrono;
 use chrono::prelude::*;
+
+extern crate image;
+use image::{GenericImage, ImageBuffer, imageops};
 
 static STILL_PROGRAM: &'static str = "raspistill";
 static RESIZE_PROGRAM: &'static str = "convert";
 static MODIFY_PROGRAM: &'static str = "mogrify";
 
 #[allow(dead_code)]
-pub struct Image {
+pub struct Picture {
     pub number: u32,
     pub basename: String,
     pub path: String,
@@ -18,9 +22,9 @@ pub struct Image {
 }
 
 #[allow(dead_code)]
-impl Image {
-    pub fn new(num: u32, name: &str, p: &str) -> Image {
-        Image {
+impl Picture {
+    pub fn new(num: u32, name: &str, p: &str) -> Picture {
+        Picture {
             number : num,
             filename : String::from(p) 
                 + name.clone() 
@@ -74,24 +78,43 @@ impl Image {
         Err(Error::new(ErrorKind::NotFound, "Can't take picture"))	
     }
 
-    pub fn resize(&mut self, resized_name: String, new_size: String) -> Result<(), Error> {
+    pub fn resize(&mut self, resized_name: String, 
+                    new_size: String) -> Result<(), Error> {
         // can't resize non existant picture
         if !self.captured {
             return Err(Error::new(ErrorKind::NotFound, "No picture available"));
         }
 
-        let status = Command::new(RESIZE_PROGRAM)
-            .arg(&self.filename)
-            .arg("-resize")
-            .arg(&new_size)
-            .arg(&(self.path.clone() + &resized_name))
+        let img = image::open(&self.filename).unwrap();
+
+        img.save(&resized_name).unwrap();
+    
+        Ok(())
+    
+    }
+
+    pub fn add_info(&mut self, 
+                       file: String, 
+                       id: String, 
+                       subid: String, 
+                       msg: String) -> Result<(), Error> {
+
+        let status = Command::new(MODIFY_PROGRAM)
+            .arg("-fill")
+            .arg("white")
+            .arg("-pointsize")
+            .arg("24")
+            //.args(&["-draw", &format!("'text 10,40 \"{}{}\" '", &id, &subid)])
+            .arg(&OsStr::new(&format!("-draw \"text 10,40 '{}{}'\"", &id, &subid)))
+            .arg(&file)
             .status();
+
         let exit_code: i32;
         match status {
             Ok(s) => exit_code = s.code().unwrap(),
             Err(_e) => {
                 return Err(Error::new(
-                    ErrorKind::NotFound, "convert failed")
+                    ErrorKind::NotFound, "mogrify failed")
                     )
             }
         }
@@ -99,10 +122,10 @@ impl Image {
         // ok
         if exit_code == 0 {
             return Ok(());
+        } else {
+            return Err(Error::new(ErrorKind::NotFound, "Can't modify picture"));
         }
 
-        // exit code was not 0
-        Err(Error::new(ErrorKind::NotFound, "Can't resize picture"))	
     }
  
 
