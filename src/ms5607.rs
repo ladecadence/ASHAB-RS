@@ -18,7 +18,6 @@ const MS5607_CMD_ADC_2048: u8   = 0x06;    // ADC oversampling ratio to 2048
 const MS5607_CMD_ADC_4096: u8   = 0x08;    // ADC oversampling ratio to 4096
 const MS5607_CMD_PROM_RD: u8    = 0xA0;    // readout of PROM registers
 
-#[allow(dead_code)]
 pub struct Ms5607 {
     pub bus: LinuxI2CDevice,
     pub addr: u16,
@@ -27,6 +26,7 @@ pub struct Ms5607 {
     p: i64,
 }
 
+#[allow(dead_code)]
 impl Ms5607 {
     pub fn new(b: u8, a: u16) -> Ms5607 {
         Ms5607 {
