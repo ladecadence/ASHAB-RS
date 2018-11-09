@@ -132,7 +132,7 @@ impl Telemetry {
 					self.dec_lat(),
 					self.ns,
 					self.dec_lon(),
-					self.ns
+					self.ew
 					));
 		aprs.push_str(&self.sep);
 		aprs.push_str(&format!("SATS={}", self.sats));
