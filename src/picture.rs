@@ -6,7 +6,7 @@ extern crate chrono;
 use chrono::prelude::*;
 
 extern crate image;
-use image::{GenericImage, ImageBuffer, imageops};
+use image::{GenericImage, ImageBuffer, imageops, FilterType};
 
 static STILL_PROGRAM: &'static str = "raspistill";
 static RESIZE_PROGRAM: &'static str = "convert";
@@ -78,20 +78,42 @@ impl Picture {
         Err(Error::new(ErrorKind::NotFound, "Can't take picture"))	
     }
 
-    pub fn resize(&mut self, resized_name: String, 
-                    new_size: String) -> Result<(), Error> {
-        // can't resize non existant picture
-        if !self.captured {
-            return Err(Error::new(ErrorKind::NotFound, "No picture available"));
+    pub fn capture_small(&mut self, name: String, res: String) -> Result<(), Error> {
+
+	// get resolution
+	let resolution: Vec<&str> = res.split("x").collect();
+	        
+	let status = Command::new(STILL_PROGRAM)
+            .arg("-st")
+            .arg("-t")
+            .arg("1000")
+	    .arg("-w")
+	    .arg(resolution[0])
+	    .arg("-h")
+	    .arg(resolution[1])
+            .arg("-o")
+            .arg(&(self.path.clone() + &name))
+            .status();
+        let exit_code: i32;
+        match status {
+            Ok(s) => exit_code = s.code().unwrap(),
+            Err(e) => { 
+                println!("{}", e); 
+                return Err(Error::new(
+                        ErrorKind::NotFound, "raspistill failed")
+                          ) 
+            }
         }
 
-        let img = image::open(&self.filename).unwrap();
+        // if we manage to capture a picture, 
+        if exit_code == 0 {
+            return Ok(());
+        }
 
-        img.save(&resized_name).unwrap();
-    
-        Ok(())
-    
+        // exit code was not 0
+        Err(Error::new(ErrorKind::NotFound, "Can't take picture"))	
     }
+
 
     pub fn add_info(&mut self, 
                        file: String, 

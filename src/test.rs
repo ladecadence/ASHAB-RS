@@ -3,6 +3,7 @@ extern crate spidev;
 extern crate sysfs_gpio;
 extern crate chrono;
 extern crate ini;
+extern crate image;
 
 // own uses
 mod gps;
@@ -86,8 +87,8 @@ fn main() {
         Err(e) => println!("Error tomando foto {}", e),
     };
 
-    match pic.resize(config.ssdv_name.clone(), config.ssdv_size.clone()) {
-        Ok(()) => println!("Redimensionada imagen."),
+    match pic.capture_small(config.ssdv_name.clone(), config.ssdv_size.clone()) {
+        Ok(()) => println!("Capturada imagen: {}", config.ssdv_name.clone()),
         Err(e) => println!("Error redimensionando foto {}", e),
     };
 
