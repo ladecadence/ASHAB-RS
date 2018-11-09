@@ -7,7 +7,6 @@ pub struct SSDV {
     pub id: String,
     pub count: u8,
     filename: String,
-    path: String,
     pub binaryname: String,
 }
 
@@ -16,7 +15,6 @@ impl SSDV {
         SSDV {
             image_file : img.clone(),
             id : i,
-	    path: p.clone(),
             count : cnt,
             filename : img.clone(), 
             binaryname: p.clone() + &b + ".bin",

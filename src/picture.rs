@@ -1,16 +1,18 @@
 use std::process::Command;
 use std::io::{Error, ErrorKind};
-use std::ffi::OsStr;
 
 extern crate chrono;
 use chrono::prelude::*;
 
 extern crate image;
-use image::{GenericImage, ImageBuffer, imageops, FilterType};
+extern crate imageproc;
+use imageproc::drawing::draw_text_mut;
+use image::{Rgba,};
+
+extern crate rusttype;
+use rusttype::{FontCollection, Scale};
 
 static STILL_PROGRAM: &'static str = "raspistill";
-static RESIZE_PROGRAM: &'static str = "convert";
-static MODIFY_PROGRAM: &'static str = "mogrify";
 
 #[allow(dead_code)]
 pub struct Picture {
@@ -119,34 +121,81 @@ impl Picture {
                        file: String, 
                        id: String, 
                        subid: String, 
-                       msg: String) -> Result<(), Error> {
+                       msg: String,
+                       data: String ) -> Result<(), Error> {
 
-        let status = Command::new(MODIFY_PROGRAM)
-            .arg("-fill")
-            .arg("white")
-            .arg("-pointsize")
-            .arg("24")
-            //.args(&["-draw", &format!("'text 10,40 \"{}{}\" '", &id, &subid)])
-            .arg(&OsStr::new(&format!("-draw \"text 10,40 '{}{}'\"", &id, &subid)))
-            .arg(&file)
-            .status();
+        let datetime = Utc::now().to_rfc3339().to_string();
 
-        let exit_code: i32;
-        match status {
-            Ok(s) => exit_code = s.code().unwrap(),
-            Err(_e) => {
-                return Err(Error::new(
-                    ErrorKind::NotFound, "mogrify failed")
-                    )
-            }
-        }
+        let mut image = image::open(&file).unwrap();
+        let font = Vec::from(include_bytes!("DejaVuSans.ttf") as &[u8]);
+        let font = FontCollection::from_bytes(font).unwrap().into_font().unwrap();
 
-        // ok
-        if exit_code == 0 {
-            return Ok(());
-        } else {
-            return Err(Error::new(ErrorKind::NotFound, "Can't modify picture"));
-        }
+        let mut height = 20.0;
+        let scale = Scale { x: height * 2.0, y: height };
+        draw_text_mut(&mut image, 
+            Rgba([0u8, 0u8, 0u8, 255u8]), 
+            10, 
+            20, 
+            scale, 
+            &font, 
+            &format!("{}{}", &id, &subid));
+        draw_text_mut(&mut image, 
+            Rgba([255u8, 255u8, 255u8, 255u8]), 
+            12, 
+            22, 
+            scale, 
+            &font, 
+            &format!("{}{}", &id, &subid));
+        height = 17.0;
+        let scale = Scale { x: height, y: height };
+        draw_text_mut(&mut image, 
+            Rgba([0u8, 0u8, 0u8, 0u8]), 
+            10, 
+            45, 
+            scale, 
+            &font, 
+            &format!("{}", &msg));
+        draw_text_mut(&mut image, 
+            Rgba([255u8, 255u8, 255u8, 255u8]), 
+            11, 
+            46, 
+            scale, 
+            &font, 
+            &format!("{}", &msg));
+        draw_text_mut(&mut image, 
+            Rgba([0u8, 0u8, 0u8, 0u8]), 
+            10, 
+            65, 
+            scale, 
+            &font, 
+            &format!("{}", &datetime));
+        draw_text_mut(&mut image, 
+            Rgba([255u8, 255u8, 255u8, 255u8]), 
+            11, 
+            66, 
+            scale, 
+            &font, 
+            &format!("{}", &datetime));
+        draw_text_mut(&mut image, 
+            Rgba([0u8, 0u8, 0u8, 0u8]), 
+            10, 
+            80, 
+            scale, 
+            &font, 
+            &format!("{}", &data));
+        draw_text_mut(&mut image, 
+            Rgba([255u8, 255u8, 255u8, 255u8]), 
+            11, 
+            81, 
+            scale, 
+            &font, 
+            &format!("{}", &data));
+     
+        
+        image.save(&file).unwrap();
+
+        //return Err(Error::new(ErrorKind::NotFound, "Can't modify picture"));
+        Ok(())
 
     }
  

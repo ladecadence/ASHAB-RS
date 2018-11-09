@@ -4,6 +4,8 @@ extern crate sysfs_gpio;
 extern crate chrono;
 extern crate ini;
 extern crate image;
+extern crate imageproc;
+extern crate rusttype;
 
 // own uses
 mod gps;
@@ -82,22 +84,32 @@ fn main() {
     	&(config.path_main_dir.clone() + &config.path_images_dir.clone())
 	);
 
+    // capture
     match pic.capture() {
         Ok(()) => println!("Capturada imagen {}", pic.filename),
         Err(e) => println!("Error tomando foto {}", e),
     };
 
+    // capture small picture for ssdv
     match pic.capture_small(config.ssdv_name.clone(), config.ssdv_size.clone()) {
         Ok(()) => println!("Capturada imagen: {}", config.ssdv_name.clone()),
         Err(e) => println!("Error redimensionando foto {}", e),
     };
 
+    // add info
     match pic.add_info(config.path_main_dir.clone()
                         + &config.path_images_dir.clone()
                         + &config.ssdv_name.clone(),
                     config.id.clone(),
                     config.subid.clone(),
                     config.msg.clone(),
+                    format!("{}{}, {}{}, {}m",
+                        gps.decimal_latitude(),
+                        gps.ns,
+                        gps.decimal_longitude(),
+                        gps.ew,
+                        gps.altitude,
+                        )
                     ) {
         Ok(()) => println!("Modificada imagen."),
         Err(e) => println!("Error modificando foto {}", e),
@@ -108,8 +120,8 @@ fn main() {
     		config.path_main_dir.clone()
                 + &config.path_images_dir.clone()
                 + &config.ssdv_name.clone(),
-			config.path_main_dir.clone() 
-				+ &config.path_images_dir.clone(),
+            config.path_main_dir.clone()
+                + &config.path_images_dir.clone(),
 			config.ssdv_name,
 			config.id.clone(),
 			0
