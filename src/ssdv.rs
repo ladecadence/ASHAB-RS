@@ -1,5 +1,7 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
 
+// ssdv program
+// https://github.com/fsphil/ssdv
 static SSDV_PROGRAM: &'static str = "ssdv";
 
 pub struct SSDV {
@@ -30,6 +32,8 @@ impl SSDV {
             .arg(&format!("{}", self.count))
             .arg(&self.filename)
             .arg(&self.binaryname)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .status();
         let exit_code: i32;
         match status {

@@ -14,6 +14,9 @@ use rusttype::{FontCollection, Scale};
 
 static STILL_PROGRAM: &'static str = "raspistill";
 
+const text_big: f32 = 12.0;
+const text_small: f32 = 8.0;
+
 #[allow(dead_code)]
 pub struct Picture {
     pub number: u32,
@@ -127,11 +130,10 @@ impl Picture {
         let datetime = Utc::now().to_rfc3339().to_string();
 
         let mut image = image::open(&file).unwrap();
-        let font = Vec::from(include_bytes!("DejaVuSans.ttf") as &[u8]);
+        let font = Vec::from(include_bytes!("font.ttf") as &[u8]);
         let font = FontCollection::from_bytes(font).unwrap().into_font().unwrap();
 
-        let mut height = 20.0;
-        let scale = Scale { x: height * 2.0, y: height };
+        let scale = Scale { x: text_big * 2.0, y: text_big };
         draw_text_mut(&mut image, 
             Rgba([0u8, 0u8, 0u8, 255u8]), 
             10, 
@@ -146,8 +148,8 @@ impl Picture {
             scale, 
             &font, 
             &format!("{}{}", &id, &subid));
-        height = 17.0;
-        let scale = Scale { x: height, y: height };
+        
+        let scale = Scale { x: text_small, y: text_small };
         draw_text_mut(&mut image, 
             Rgba([0u8, 0u8, 0u8, 0u8]), 
             10, 
