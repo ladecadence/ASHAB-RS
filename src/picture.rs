@@ -11,10 +11,13 @@ use image::{Rgba,};
 extern crate rusttype;
 use rusttype::{FontCollection, Scale};
 
-static STILL_PROGRAM: &'static str = "raspistill";
 
-const TEXT_BIG: f32 = 12.0;
-const TEXT_SMALL: f32 = 8.0;
+// Constants and macros
+static STILL_PROGRAM: &'static str = "raspistill";
+macro_rules! FONT_FILE { () => { "Vasca.ttf" }; }
+
+const TEXT_BIG: f32 = 15.0;
+const TEXT_SMALL: f32 = 10.0;
 
 // Possible errors
 
@@ -160,7 +163,7 @@ impl Picture {
         };
 
         // create font
-        let font = Vec::from(include_bytes!("font.ttf") as &[u8]);
+        let font = Vec::from(include_bytes!(FONT_FILE!()) as &[u8]);
         let font = match FontCollection::from_bytes(font) {
                         Ok(f) => f,
                         Err(_e) => return Err(
