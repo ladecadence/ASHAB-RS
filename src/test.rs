@@ -87,13 +87,13 @@ fn main() {
     // capture
     match pic.capture() {
         Ok(()) => println!("Capturada imagen {}", pic.filename),
-        Err(e) => println!("Error tomando foto {}", e),
+        Err(e) => println!("Error tomando foto {:?}", e),
     };
 
     // capture small picture for ssdv
     match pic.capture_small(config.ssdv_name.clone(), config.ssdv_size.clone()) {
         Ok(()) => println!("Capturada imagen: {}", config.ssdv_name.clone()),
-        Err(e) => println!("Error redimensionando foto {}", e),
+        Err(e) => println!("Error redimensionando foto {:?}", e),
     };
 
     // add info
@@ -112,7 +112,7 @@ fn main() {
                         )
                     ) {
         Ok(()) => println!("Modificada imagen."),
-        Err(e) => println!("Error modificando foto {}", e),
+        Err(e) => println!("Error modificando foto {:?}", e),
     }
 
     // test ssdv

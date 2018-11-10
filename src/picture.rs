@@ -1,5 +1,4 @@
 use std::process::Command;
-use std::io::{Error, ErrorKind};
 
 extern crate chrono;
 use chrono::prelude::*;
@@ -16,6 +15,30 @@ static STILL_PROGRAM: &'static str = "raspistill";
 
 const TEXT_BIG: f32 = 12.0;
 const TEXT_SMALL: f32 = 8.0;
+
+// Possible errors
+
+#[derive(Debug)]
+pub enum PictureErrorType {
+    Camera,
+    Capture,
+    Modify,
+    IO,
+}
+
+#[derive(Debug)]
+pub struct PictureError {
+    pub error_type: PictureErrorType,
+}
+
+impl PictureError {
+    pub fn new (t: PictureErrorType) -> PictureError {
+        PictureError {
+            error_type : t,
+        }
+    }
+}
+
 
 #[allow(dead_code)]
 pub struct Picture {
@@ -48,7 +71,7 @@ impl Picture {
             + "-" + &self.number.to_string() + ".jpg";
     }
 
-    pub fn capture(&mut self) -> Result<(), Error> {
+    pub fn capture(&mut self) -> Result<(), PictureError> {
 
         // update filename
         self.update_name();
@@ -65,8 +88,8 @@ impl Picture {
             Ok(s) => exit_code = s.code().unwrap(),
             Err(e) => { 
                 println!("{}", e); 
-                return Err(Error::new(
-                        ErrorKind::NotFound, "raspistill failed")
+                return Err(PictureError::new(
+                        PictureErrorType::Camera)
                           ) 
             }
         }
@@ -80,10 +103,10 @@ impl Picture {
         }
 
         // exit code was not 0
-        Err(Error::new(ErrorKind::NotFound, "Can't take picture"))	
+        Err(PictureError::new(PictureErrorType::Capture))	
     }
 
-    pub fn capture_small(&mut self, name: String, res: String) -> Result<(), Error> {
+    pub fn capture_small(&mut self, name: String, res: String) -> Result<(), PictureError> {
 
 	// get resolution
 	let resolution: Vec<&str> = res.split("x").collect();
@@ -92,10 +115,10 @@ impl Picture {
             .arg("-st")
             .arg("-t")
             .arg("1000")
-	    .arg("-w")
-	    .arg(resolution[0])
-	    .arg("-h")
-	    .arg(resolution[1])
+	        .arg("-w")
+	        .arg(resolution[0])
+	        .arg("-h")
+	        .arg(resolution[1])
             .arg("-o")
             .arg(&(self.path.clone() + &name))
             .status();
@@ -104,8 +127,8 @@ impl Picture {
             Ok(s) => exit_code = s.code().unwrap(),
             Err(e) => { 
                 println!("{}", e); 
-                return Err(Error::new(
-                        ErrorKind::NotFound, "raspistill failed")
+                return Err(PictureError::new(
+                        PictureErrorType::Camera)
                           ) 
             }
         }
@@ -116,23 +139,42 @@ impl Picture {
         }
 
         // exit code was not 0
-        Err(Error::new(ErrorKind::NotFound, "Can't take picture"))	
+        Err(PictureError::new(PictureErrorType::Capture))	
     }
 
-
+    // add basic data to pictures to be sent by SSDV
     pub fn add_info(&mut self, 
                        file: String, 
                        id: String, 
                        subid: String, 
                        msg: String,
-                       data: String ) -> Result<(), Error> {
+                       data: String ) -> Result<(), PictureError> {
 
+        // get date
         let datetime = Utc::now().to_rfc3339().to_string();
 
-        let mut image = image::open(&file).unwrap();
-        let font = Vec::from(include_bytes!("font.ttf") as &[u8]);
-        let font = FontCollection::from_bytes(font).unwrap().into_font().unwrap();
+        // try to open image
+        let mut image = match image::open(&file) {
+            Ok(i) => i,
+            Err(_e) => return Err(PictureError::new(PictureErrorType::IO)),
+        };
 
+        // create font
+        let font = Vec::from(include_bytes!("font.ttf") as &[u8]);
+        let font = match FontCollection::from_bytes(font) {
+                        Ok(f) => f,
+                        Err(_e) => return Err(
+                            PictureError::new(PictureErrorType::Modify)
+                            ),
+        };
+        let font = match font.into_font() {
+                        Ok(f) => f,
+                        Err(_e) => return Err(
+                            PictureError::new(PictureErrorType::Modify)
+                            ),
+        };
+
+        // add data
         let scale = Scale { x: TEXT_BIG * 2.0, y: TEXT_BIG };
         draw_text_mut(&mut image, 
             Rgba([0u8, 0u8, 0u8, 255u8]), 
@@ -150,6 +192,7 @@ impl Picture {
             &format!("{}{}", &id, &subid));
         
         let scale = Scale { x: TEXT_SMALL, y: TEXT_SMALL };
+
         draw_text_mut(&mut image, 
             Rgba([0u8, 0u8, 0u8, 0u8]), 
             10, 
@@ -193,11 +236,11 @@ impl Picture {
             &font, 
             &format!("{}", &data));
      
-        
-        image.save(&file).unwrap();
-
-        //return Err(Error::new(ErrorKind::NotFound, "Can't modify picture"));
-        Ok(())
+        // save modified image
+        match image.save(&file) {
+            Ok(()) => return Ok(()),
+            Err(_e) => return Err(PictureError::new(PictureErrorType::IO)),
+        }
 
     }
  
