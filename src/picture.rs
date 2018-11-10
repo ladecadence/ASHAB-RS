@@ -14,10 +14,10 @@ use rusttype::{FontCollection, Scale};
 
 // Constants and macros
 static STILL_PROGRAM: &'static str = "raspistill";
-macro_rules! FONT_FILE { () => { "Vasca.ttf" }; }
+macro_rules! FONT_FILE { () => { "ComicNeue-Regular.ttf" }; }
 
-const TEXT_BIG: f32 = 15.0;
-const TEXT_SMALL: f32 = 10.0;
+const TEXT_BIG: f32 = 25.0;
+const TEXT_SMALL: f32 = 17.0;
 
 // Possible errors
 
