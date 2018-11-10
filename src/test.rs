@@ -128,7 +128,7 @@ fn main() {
 			);
     match ssdv.encode() {
         Ok(()) => println!("Encodeado SSDV {}", ssdv.binaryname),
-	    Err(e) => println!("Error encodeando SSDV: {}", e),
+	    Err(e) => println!("Error encodeando SSDV: {:?}", e),
     };
 
     // test temperature sensor

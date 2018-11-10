@@ -4,6 +4,27 @@ use std::process::{Command, Stdio};
 // https://github.com/fsphil/ssdv
 static SSDV_PROGRAM: &'static str = "ssdv";
 
+// Errors
+#[derive(Debug)]
+pub enum SSDVErrorType {
+    External,
+    IO,
+}
+
+#[derive(Debug)]
+pub struct SSDVError {
+    error_type: SSDVErrorType,
+}
+
+impl SSDVError {
+    pub fn new(e: SSDVErrorType) -> SSDVError {
+        SSDVError {
+            error_type: e,
+        }
+    }
+}
+
+
 pub struct SSDV {
     pub image_file: String,
     pub id: String,
@@ -23,7 +44,7 @@ impl SSDV {
         }
     }
 
-    pub fn encode(&mut self) -> Result<(), &'static str> {
+    pub fn encode(&mut self) -> Result<(), SSDVError> {
         let status = Command::new(SSDV_PROGRAM)
             .arg("-e")
             .arg("-c")
@@ -38,7 +59,7 @@ impl SSDV {
         let exit_code: i32;
         match status {
             Ok(s) => exit_code = s.code().unwrap(),
-            Err(_e) => return Err("ssdv failed"),
+            Err(_e) => return Err(SSDVError::new(SSDVErrorType::IO)),
         }
 
         // ssdv worked, return Ok
@@ -47,7 +68,7 @@ impl SSDV {
         }
 
         // exit code not 0
-        Err("ssdv failed")
+        Err(SSDVError::new(SSDVErrorType::External))
 
     }
 
