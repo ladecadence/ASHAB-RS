@@ -20,6 +20,7 @@ pub struct Telemetry {
 	date: String,
 	time: String,
 	sep: String,
+    date_time: DateTime<Utc>,
 
 }
 
@@ -44,8 +45,13 @@ impl Telemetry {
 			tin: 0.0,
 			tout: 0.0,
 			arate: 0.0,
-			date: String::from(""),
-			time: String::from(""),	
+            date_time: Utc::now(),
+			date: format!("{:02}-{:02}-{}",
+                Utc::now().day(), Utc::now().month(),
+                Utc::now().year()),
+			time: format!("{:02}:{:02}:{02}",
+                Utc::now().hour(), Utc::now().minute(),
+                Utc::now().second()),
 		}
 	}
 
@@ -53,7 +59,10 @@ impl Telemetry {
 			lon: f32, ew: char, alt: f32,
 			hdg: f32, spd: f32, sats: u32, 
 			vbat: f32, baro: f32, tin: f32, 
-			tout: f32, arate: f32) {
+			tout: f32) {
+
+        // save old altitude for ascension rate
+        let old_alt = self.alt;
 
 		// update fields
 		self.lat = lat;
@@ -68,20 +77,33 @@ impl Telemetry {
 		self.baro = baro;
 		self.tin = tin;
 		self.tout = tout;
-		self.arate = arate;
-		
+	
+        // save old datetime
+        let old_date_time = self.date_time;
+
 		// update packet date
-		let date_time = Utc::now();
+		self.date_time = Utc::now();
 		self.date = format!("{:02}-{:02}-{}",
-					date_time.day(),
-					date_time.month(),
-					date_time.year()
+					self.date_time.day(),
+					self.date_time.month(),
+					self.date_time.year()
 					);
 		self.time = format!("{:02}:{:02}:{02}",
-					date_time.hour(),
-					date_time.minute(),
-					date_time.second()
+					self.date_time.hour(),
+					self.date_time.minute(),
+					self.date_time.second()
 					);
+
+        // calculate ascension rate
+        let delta_time = self.date_time.signed_duration_since(old_date_time);
+        if delta_time.num_milliseconds() != 0 {
+            self.arate = (self.alt - old_alt) as f32 / 
+                            (delta_time.num_milliseconds() as f32 / 1000.0);
+        } else {
+            self.arate = 0.0;
+        }
+
+
 	}
 
 	fn dec_lat(&self) -> f32 {

@@ -7,6 +7,9 @@ extern crate image;
 extern crate imageproc;
 extern crate rusttype;
 
+use std::time::Duration;
+use std::thread;
+
 // own uses
 mod gps;
 use gps::*;
@@ -185,8 +188,9 @@ fn main() {
     let mut telem: Telemetry = Telemetry::new(config.id, 
                             config.msg, 
                         config.separator);
-    telem.update(4807.038, 'N', 1131.000, 'E', 123.0, 80.2, 1.5, 
-        4, 6.98, 1004.6, 25.3, 12.6, 0.9);     			
+    thread::sleep(Duration::from_millis(1500));
+    telem.update(4807.038, 'N', 1131.000, 'E', 124.0, 80.2, 1.5, 
+        4, 6.98, 1004.6, 25.3, 12.6);     			
 
     println!("Telemetry: ");
     println!("{}", telem.aprs_string());
