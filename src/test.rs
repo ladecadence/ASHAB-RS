@@ -127,9 +127,22 @@ fn main() {
 			0
 			);
     match ssdv.encode() {
-        Ok(()) => println!("Encodeado SSDV {}, paquetes: {}", ssdv.binaryname, ssdv.packets),
+        Ok(()) => println!("Encodeado SSDV {}, paquetes: {}", 
+                                ssdv.binaryname, ssdv.packets),
 	    Err(e) => println!("Error encodeando SSDV: {:?}", e),
     };
+
+    // get last ssdv packet
+    let i = ssdv.packets - 1;
+    match ssdv.get_packet(i) {
+        Ok(p) => { 
+            print!("Packet first 8 bytes: ");
+            println!("{:x} {:x} {:x} {:x} {:x} {} {} {}", 
+                                        p[0], p[1], p[2], p[3],
+                                        p[4], p[5], p[6], p[7]);
+        },
+        Err(e) => println!("Error: {:?}", e),
+    }
 
     // test temperature sensor
     let mut temp_sensor: DS18B20 = DS18B20::new(&config.temp_external_addr);

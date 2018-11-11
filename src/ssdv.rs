@@ -1,5 +1,8 @@
 use std::process::{Command, Stdio};
 use std::fs;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::SeekFrom;
 
 // ssdv program
 // https://github.com/fsphil/ssdv
@@ -10,6 +13,7 @@ static SSDV_PROGRAM: &'static str = "ssdv";
 pub enum SSDVErrorType {
     External,
     IO,
+    Access,
 }
 
 #[derive(Debug)]
@@ -82,5 +86,30 @@ impl SSDV {
 
     }
 
+    pub fn get_packet(&mut self, packet: u64) -> Result<[u8; 255], SSDVError> {
+        // return if no packets
+        if self.packets == 0 {
+            return Err(SSDVError::new(SSDVErrorType::Access));
+        }
+
+        // return if invalid index
+        if packet > self.packets {
+            return Err(SSDVError::new(SSDVErrorType::Access));
+        }
+
+        // Ok, get packet
+        let mut _file = match File::open(&self.binaryname) {
+            Ok(mut f) => {
+                // move the cursor, we can unwrap as we already checked number of packets
+                // don't read first byte from packet (sync byte)
+                f.seek(SeekFrom::Start((packet*256)+1)).unwrap();
+                // read the buffer
+                let mut buf = [0; 255];
+                f.read(&mut buf).unwrap();
+                return Ok(buf);
+            },
+            Err(_e) => return Err(SSDVError::new(SSDVErrorType::IO)),
+        };
+    }
 }
 
