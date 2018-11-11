@@ -127,7 +127,7 @@ fn main() {
 			0
 			);
     match ssdv.encode() {
-        Ok(()) => println!("Encodeado SSDV {}", ssdv.binaryname),
+        Ok(()) => println!("Encodeado SSDV {}, paquetes: {}", ssdv.binaryname, ssdv.packets),
 	    Err(e) => println!("Error encodeando SSDV: {:?}", e),
     };
 

@@ -1,4 +1,5 @@
 use std::process::{Command, Stdio};
+use std::fs;
 
 // ssdv program
 // https://github.com/fsphil/ssdv
@@ -31,6 +32,7 @@ pub struct SSDV {
     pub count: u8,
     filename: String,
     pub binaryname: String,
+    pub packets: u64,
 }
 
 impl SSDV {
@@ -41,6 +43,7 @@ impl SSDV {
             count : cnt,
             filename : img.clone(), 
             binaryname: p.clone() + &b + ".bin",
+            packets: 0,
         }
     }
 
@@ -62,13 +65,20 @@ impl SSDV {
             Err(_e) => return Err(SSDVError::new(SSDVErrorType::IO)),
         }
 
-        // ssdv worked, return Ok
+        // ssdv worked, get number of packets and return
         if exit_code == 0 {
-            return Ok(());
+            let _f = match fs::metadata(&self.binaryname) {
+                Ok(f) => {
+                    // get number of packets of the file
+                    self.packets = f.len() / 256;
+                    return Ok(()); 
+                },
+                Err(_e) => return Err(SSDVError::new(SSDVErrorType::IO)),
+            };
+        } else {
+            // exit code not 0
+            return Err(SSDVError::new(SSDVErrorType::External));
         }
-
-        // exit code not 0
-        Err(SSDVError::new(SSDVErrorType::External))
 
     }
 
