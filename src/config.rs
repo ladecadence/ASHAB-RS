@@ -1,7 +1,27 @@
 extern crate ini;
 use ini::Ini;
 
-use std::io::{Error, ErrorKind};
+#[derive(Debug)]
+pub enum ConfigErrorType {
+    IO,
+    Section,
+}
+
+#[derive(Debug)]
+pub struct ConfigError {
+    pub error_type: ConfigErrorType,
+    pub info: &'static str,
+}
+
+impl ConfigError {
+    pub fn new(e: ConfigErrorType, s: &'static str) -> ConfigError {
+        ConfigError {
+            error_type: e,
+            info: s,
+        }
+    }
+}
+
 
 #[derive(Debug)]
 pub struct Config {
@@ -91,20 +111,20 @@ impl Config {
         }
     }
 
-    pub fn open(&mut self) -> Result<(), Error> {
+    pub fn open(&mut self) -> Result<(), ConfigError> {
         // open config file
         let conf = match Ini::load_from_file(&self.file) {
             Ok(c) => c,
-            Err(_e) => return Err(Error::new(
-                    ErrorKind::NotFound, 
+            Err(_e) => return Err(ConfigError::new(
+                    ConfigErrorType::IO, 
                     "Can't open config file")
                                  ),
         };
         // get mission section
         let section_mission = match conf.section(Some("mission".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section mission not found")
                               ),
         };
@@ -127,8 +147,8 @@ impl Config {
         // get gpio section
         let section_gpio = match conf.section(Some("gpio".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section gpio not found")
                               ),
         };
@@ -145,8 +165,8 @@ impl Config {
         // get gps section
         let section_gps = match conf.section(Some("gps".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section gps not found")
                               ),
         };
@@ -162,8 +182,8 @@ impl Config {
         // get lora section
         let section_lora = match conf.section(Some("lora".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section lora not found")
                               ),
         };
@@ -192,8 +212,8 @@ impl Config {
         // get adc section
         let section_adc = match conf.section(Some("adc".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section adc not found")
                               ),
         };
@@ -218,8 +238,8 @@ impl Config {
         // get temp section
         let section_temp = match conf.section(Some("temp".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section temp not found")
                               ),
         };
@@ -234,8 +254,8 @@ impl Config {
         // get baro section
         let section_baro = match conf.section(Some("baro".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section baro not found")
                               ),
         };
@@ -253,8 +273,8 @@ impl Config {
         // get path section
         let section_path = match conf.section(Some("paths".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section paths not found")
                               ),
         };
@@ -272,8 +292,8 @@ impl Config {
         // get ssdv section
         let section_ssdv = match conf.section(Some("ssdv".to_owned())) {
             Some(s) => s,
-            None => return Err(Error::new(
-                    ErrorKind::Other, 
+            None => return Err(ConfigError::new(
+                    ConfigErrorType::Section, 
                     "Section ssdv not found")
                               ),
         };

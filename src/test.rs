@@ -54,7 +54,7 @@ fn main() {
     let mut config: Config = Config::new(CONFIG_FILE);
     match config.open() {
         Ok(()) => println!("{}", config.id),
-        Err(e) => { println!("Error: {}", e); std::process::exit(1); },
+        Err(e) => { println!("Error: {}", e.info); std::process::exit(1); },
     };
 
 
