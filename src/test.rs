@@ -9,6 +9,8 @@ extern crate rusttype;
 
 use std::time::Duration;
 use std::thread;
+use std::io::prelude::*;
+use std::io; 
 
 // own uses
 mod gps;
@@ -71,7 +73,7 @@ fn main() {
         },
         Err(e) => match e.error_type {
             GpsErrorType::Sats => println!("GPS: No hay suficientes sats"),
-            GpsErrorType::GGA => println!("GPS: Error en la sentencia GGA"),
+            GpsErrorType::GGA => println!("GPS: Error en la sentencia GGA: {}", gps.line_gga),
             GpsErrorType::RMC => println!("GPS: Error en la sentencia RMC"),
             GpsErrorType::Fix => println!("GPS: Error con el Fix"),
             GpsErrorType::Parse => println!("GPS: Error parseando los datos"),
@@ -190,7 +192,7 @@ fn main() {
                         config.separator);
     thread::sleep(Duration::from_millis(1500));
     telem.update(4807.038, 'N', 1131.000, 'E', 124.0, 80.2, 1.5, 
-        4, 6.98, 1004.6, 25.3, 12.6);     			
+        4, 6.98, baro.get_pres().unwrap(), temp_sensor.read().unwrap(), 12.6);
 
     println!("Telemetry: ");
     println!("{}", telem.aprs_string());
@@ -211,6 +213,20 @@ fn main() {
     println!("Sending...");
     lora.send(telem.aprs_string().as_bytes());
     lora.wait_packet_sent();
+
+    thread::sleep(Duration::from_millis(1000));
+
+    println!("Sending image...");
+    print!("Packet: ");
+    // test sending a SSDV image
+    for i in 0..ssdv.packets {
+	lora.send(&ssdv.get_packet(i).unwrap());
+	lora.wait_packet_sent();
+        thread::sleep(Duration::from_millis(10));
+	print!("{}, ", &i);
+	io::stdout().flush().ok().expect("Could not flush stdout");
+    }
+    println!();
 
     std::process::exit(0);
 }

@@ -114,6 +114,7 @@ impl Picture {
 	// get resolution
 	let resolution: Vec<&str> = res.split("x").collect();
 	        
+	// capture image
 	let status = Command::new(STILL_PROGRAM)
             .arg("-st")
             .arg("-t")

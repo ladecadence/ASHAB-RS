@@ -111,7 +111,12 @@ impl GPS {
             self.line_gga.clear();
             match reader.read_line(&mut self.line_gga) {
                 Ok(_) => {},
-                Err(_e) => return Err(GpsError::new(GpsErrorType::GGA)),
+                Err(e) => { // match utf8 conversion errors
+		    match e.kind() {
+		        std::io::ErrorKind::InvalidData => {},
+			_ => return Err(GpsError::new(GpsErrorType::GGA)),
+		    }
+		},
             }
             is_gga = self.line_gga.chars().skip(3).take(3).collect();
         }
@@ -127,7 +132,12 @@ impl GPS {
             self.line_rmc.clear();
             match reader.read_line(&mut self.line_rmc) {
                 Ok(_) => {},
-                Err(_e) => return Err(GpsError::new(GpsErrorType::RMC)),
+                Err(e) => {
+		    match e.kind() {
+		        std::io::ErrorKind::InvalidData => {},
+			_ => return Err(GpsError::new(GpsErrorType::RMC)),
+		    }
+		}
             }
             is_rmc = self.line_rmc.chars().skip(3).take(3).collect();
         }
