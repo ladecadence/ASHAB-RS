@@ -220,11 +220,11 @@ fn main() {
     print!("Packet: ");
     // test sending a SSDV image
     for i in 0..ssdv.packets {
-	lora.send(&ssdv.get_packet(i).unwrap());
-	lora.wait_packet_sent();
+	    lora.send(&ssdv.get_packet(i).unwrap());
+	    lora.wait_packet_sent();
         thread::sleep(Duration::from_millis(10));
-	print!("{}, ", &i);
-	io::stdout().flush().ok().expect("Could not flush stdout");
+	    print!("{}, ", &i);
+	    io::stdout().flush().ok().expect("Could not flush stdout");
     }
     println!();
 
