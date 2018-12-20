@@ -15,5 +15,5 @@ chrono = "0.4"
 rust-ini = "0.13"
 
 [[bin]]
-name = "test"
-path = "src/test.rs"
+name = "main"
+path = "src/main.rs"
