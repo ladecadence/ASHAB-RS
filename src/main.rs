@@ -138,21 +138,58 @@ fn main() {
     // Ok, now get time from GPS and update system time
 
 
-    ///////// MAIN LOOP
-    while 1 {
+    ///////// MAIN LOOP /////////
+    loop {
         // Check for commands
 
         // Telemetry
         for i in 0..config.packet_repeat {
 
             // Update sensor data
+            // GPS
+            match gps.update() {
+                Ok(()) => {
+                    log.log(
+                        LogType::Data,
+                        &format!("{}N, {}W, Sats: {}",
+                            gps.decimal_latitude(), gps.decimal_longitude(), gps.sats
+                        )
+                    );
+                },
+                Err(e) => match e.error_type {
+                    GpsErrorType::Sats => log.log(LogType::Warn, "GPS: No hay suficientes sats"),
+                    GpsErrorType::GGA => log.log(
+                        LogType::Warn,
+                        &format!("GPS: Error en la sentencia GGA: {}", gps.line_gga)
+                    ),
+                    GpsErrorType::RMC => log.log(LogType::Warn, "GPS: Error en la sentencia RMC"),
+                    GpsErrorType::Fix => log.log(LogType::Warn, "GPS: Error con el Fix"),
+                    GpsErrorType::Parse => log.log(LogType::Warn, "GPS: Error parseando los datos"),
+                    _ => {},
+                }
+            }
+
+            // Baro
+            baro.update().unwrap();
+
+            // Temperature
+            // No need to update, can read anytime
+
+            // Battery, read ADC channel and make conversion
+            let adc_batt = match mcp3002.read(config.adc_vbatt) {
+                Ok(n) => { log.log(LogType::Data, &format!("ADC0: {}", n)); n },
+                Err(e) => { log.log(LogType::Warn, &format!("Error reading ADC: {}", e)); 0},
+            };
+            let mut vbatt: f32 = config.adc_v_mult * config.adc_v_divider * (adc_batt as f32 * 3.3/1023.0);
+            log.log(LogType::Data, &format!("VBATT: {}", vbatt));
+
 
             // Create telemetry packet
 
             // Send telemetry
 
             // Wait
-            thread::sleep(Duration::from_millis(config.packet_delay*1000));
+            thread::sleep(Duration::from_millis(config.packet_delay as u64 *1000));
 
         }
 
@@ -165,7 +202,7 @@ fn main() {
         // Send SSDV
 
         // Wait
-        thread::sleep(Duration::from_millis(config.packet_delay*1000));
+        thread::sleep(Duration::from_millis(config.packet_delay as u64 *1000));
 
     }
 }

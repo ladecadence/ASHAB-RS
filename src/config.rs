@@ -45,13 +45,13 @@ pub struct Config {
     pub lora_cs: u8,
     pub lora_int_pin: u8,
     pub lora_freq: f32,
-    pub lora_low_pwr: u32,
-    pub lora_high_pwr: u32,
+    pub lora_low_pwr: u8,
+    pub lora_high_pwr: u8,
 
     pub adc_cs: u8,
-    pub adc_vbatt: u32,
+    pub adc_vbatt: u8,
     pub adc_v_divider: f32,
-    pub adc_v_mult: u32,
+    pub adc_v_mult: f32,
 
     pub temp_internal_addr: String,
     pub temp_external_addr: String,
@@ -95,7 +95,7 @@ impl Config {
             adc_cs: 0,
             adc_vbatt: 0,
             adc_v_divider: 0.0,
-            adc_v_mult: 0,
+            adc_v_mult: 0.0,
 
             temp_internal_addr: "".to_string(),
             temp_external_addr: "".to_string(),
@@ -203,11 +203,11 @@ impl Config {
             .unwrap();
         self.lora_low_pwr = section_lora.get("low_pwr")
             .unwrap()
-            .parse::<u32>()
+            .parse::<u8>()
             .unwrap();
         self.lora_high_pwr = section_lora.get("high_pwr")
             .unwrap()
-            .parse::<u32>()
+            .parse::<u8>()
             .unwrap();
 
         // get adc section
@@ -225,7 +225,7 @@ impl Config {
             .unwrap();
         self.adc_vbatt = section_adc.get("vbatt")
             .unwrap()
-            .parse::<u32>()
+            .parse::<u8>()
             .unwrap();
         self.adc_v_divider = section_adc.get("v_divider")
             .unwrap()
@@ -233,7 +233,7 @@ impl Config {
             .unwrap();
         self.adc_v_mult = section_adc.get("v_mult")
             .unwrap()
-            .parse::<u32>()
+            .parse::<f32>()
             .unwrap();
 
         // get temp section
