@@ -5,6 +5,7 @@ use ini::Ini;
 pub enum ConfigErrorType {
     IO,
     Section,
+    Parameter,
 }
 
 #[derive(Debug)]
@@ -305,5 +306,4 @@ impl Config {
         Ok(())
     }
 }
-
 
