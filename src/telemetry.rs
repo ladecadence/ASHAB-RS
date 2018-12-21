@@ -11,7 +11,7 @@ pub struct Telemetry {
 	alt: f32, 
 	hdg: f32,
 	spd: f32,
-	sats: u32,
+	sats: u8,
 	vbat: f32,
 	baro: f32,
 	tin: f32,
@@ -57,7 +57,7 @@ impl Telemetry {
 
 	pub fn update(&mut self, lat: f32, ns: char,
 			lon: f32, ew: char, alt: f32,
-			hdg: f32, spd: f32, sats: u32, 
+			hdg: f32, spd: f32, sats: u8,
 			vbat: f32, baro: f32, tin: f32, 
 			tout: f32) {
 

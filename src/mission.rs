@@ -140,10 +140,11 @@ fn main() {
 
     ///////// MAIN LOOP /////////
     loop {
-        // Check for commands
 
         // Telemetry
         for i in 0..config.packet_repeat {
+            // Check for commands
+
 
             // Update sensor data
             // GPS
@@ -171,22 +172,51 @@ fn main() {
 
             // Baro
             baro.update().unwrap();
+            log.log(LogType::Data, &format!("BARO: {}", baro.get_pres().unwrap()));
 
-            // Temperature
-            // No need to update, can read anytime
+            // Temperatures
+            let t_in = match temp_internal.read() {
+                Ok(t) => { log.log(LogType::Data, &format!("TIN: {}", t)); t },
+                Err(e) => { log.log(LogType::Warn, &format!("Error reading TIN: {}", e)); 9999.0 },
+            };
+
+            let t_out = match temp_external.read() {
+                Ok(t) => { log.log(LogType::Data, &format!("TOUT: {}", t)); t },
+                Err(e) => { log.log(LogType::Warn, &format!("Error reading TOUT: {}", e)); 9999.0 },
+            };
 
             // Battery, read ADC channel and make conversion
             let adc_batt = match mcp3002.read(config.adc_vbatt) {
                 Ok(n) => { log.log(LogType::Data, &format!("ADC0: {}", n)); n },
                 Err(e) => { log.log(LogType::Warn, &format!("Error reading ADC: {}", e)); 0},
             };
-            let mut vbatt: f32 = config.adc_v_mult * config.adc_v_divider * (adc_batt as f32 * 3.3/1023.0);
+
+            let mut vbatt: f32 = config.adc_v_mult * config.adc_v_divider
+                * (adc_batt as f32 * 3.3/1023.0);
             log.log(LogType::Data, &format!("VBATT: {}", vbatt));
 
-
             // Create telemetry packet
+            telem.update(
+                gps.latitude,
+                gps.ns,
+                gps.longitude,
+                gps.ew,
+                gps.altitude,
+                gps.heading,
+                gps.speed,
+                gps.sats,
+                vbatt,
+                baro.get_pres().unwrap(),
+                t_in,
+                t_out,
+            );
 
             // Send telemetry
+            log.log(LogType::Info, "Sending telemetry packet...");
+            lora.send(telem.aprs_string().as_bytes());
+            lora.wait_packet_sent();
+            log.log(LogType::Info, "Telemetry packet sent.");
+            led.blink();
 
             // Wait
             thread::sleep(Duration::from_millis(config.packet_delay as u64 *1000));
@@ -207,4 +237,3 @@ fn main() {
     }
 }
 
- 

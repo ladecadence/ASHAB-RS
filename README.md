@@ -25,4 +25,3 @@ See: http://wiki.ashab.space/doku.php?id=nearspacetwo (Spanish)
 * telemetry.rs: Telemetry packets creation
 * test.rs: simple test of all the submodules
 * mission.rs : Main mission code
-
