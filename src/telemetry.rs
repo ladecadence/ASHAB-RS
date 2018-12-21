@@ -88,7 +88,7 @@ impl Telemetry {
 					self.date_time.month(),
 					self.date_time.year()
 					);
-		self.time = format!("{:02}:{:02}:{02}",
+		self.time = format!("{:02}:{:02}:{:02}",
 					self.date_time.hour(),
 					self.date_time.minute(),
 					self.date_time.second()
