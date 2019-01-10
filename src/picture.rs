@@ -45,7 +45,7 @@ impl PictureError {
 
 #[allow(dead_code)]
 pub struct Picture {
-    pub number: u32,
+    pub number: u8,
     pub basename: String,
     pub path: String,
     pub filename: String,
@@ -54,7 +54,7 @@ pub struct Picture {
 
 #[allow(dead_code)]
 impl Picture {
-    pub fn new(num: u32, name: &str, p: &str) -> Picture {
+    pub fn new(num: u8, name: &str, p: &str) -> Picture {
         Picture {
             number : num,
             filename : String::from(p) 

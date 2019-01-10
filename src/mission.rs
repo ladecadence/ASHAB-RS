@@ -26,8 +26,6 @@ extern crate rusttype;
 
 use std::time::Duration;
 use std::thread;
-use std::io::prelude::*;
-use std::io;
 
 // own uses
 mod gps;
@@ -123,8 +121,8 @@ fn main() {
     lora.set_tx_power(config.lora_low_pwr);
 
     // Telemetry object
-    let mut telem: Telemetry = Telemetry::new(config.id,
-        config.msg,
+    let mut telem: Telemetry = Telemetry::new(config.id.clone(),
+        config.msg.clone(),
         config.separator
     );
 
@@ -142,7 +140,7 @@ fn main() {
     loop {
 
         // Telemetry
-        for i in 0..config.packet_repeat {
+        for _i in 0..config.packet_repeat {
             // Check for commands
 
 
@@ -157,16 +155,19 @@ fn main() {
                         )
                     );
                 },
-                Err(e) => match e.error_type {
-                    GpsErrorType::Sats => log.log(LogType::Warn, "GPS: No hay suficientes sats"),
-                    GpsErrorType::GGA => log.log(
-                        LogType::Warn,
-                        &format!("GPS: Error en la sentencia GGA: {}", gps.line_gga)
-                    ),
-                    GpsErrorType::RMC => log.log(LogType::Warn, "GPS: Error en la sentencia RMC"),
-                    GpsErrorType::Fix => log.log(LogType::Warn, "GPS: Error con el Fix"),
-                    GpsErrorType::Parse => log.log(LogType::Warn, "GPS: Error parseando los datos"),
-                    _ => {},
+                Err(e) => { 
+                    match e.error_type {
+                        GpsErrorType::Sats => log.log(LogType::Warn, "GPS: No hay suficientes sats"),
+                        GpsErrorType::GGA => log.log(
+                            LogType::Warn,
+                            &format!("GPS: Error en la sentencia GGA: {}", gps.line_gga)
+                        ),
+                        GpsErrorType::RMC => log.log(LogType::Warn, "GPS: Error en la sentencia RMC"),
+                        GpsErrorType::Fix => log.log(LogType::Warn, "GPS: Error con el Fix"),
+                        GpsErrorType::Parse => log.log(LogType::Warn, "GPS: Error parseando los datos"),
+                        _ => {},
+                    }; 
+                    led.err();
                 }
             }
 
@@ -224,12 +225,62 @@ fn main() {
         }
 
         // Take picture
+        match pic.capture() {
+            Ok(()) => log.log(LogType::Info, &format!("Picture shot: {}", pic.filename)),
+            Err(e) => log.log(LogType::Error, &format!("Error taking picture {:?}", e)),
+        };
 
         // Take SSDV picture
+        match pic.capture_small(config.ssdv_name.clone(), config.ssdv_size.clone()) {
+            Ok(()) => log.log(LogType::Info, &format!("SSDV picture shot: {}", config.ssdv_name.clone())),
+            Err(e) => log.log(LogType::Error, &format!("Error taking SSDV picture {:?}", e)),
+        };
 
         // Encode SSDV picture
+        match pic.add_info(
+            config.path_main_dir.clone()
+                + &config.path_images_dir.clone()
+                + &config.ssdv_name.clone(),
+            config.id.clone(),
+            config.subid.clone(),
+            config.msg.clone(),
+            format!("{}{}, {}{}, {}m",
+                gps.decimal_latitude(),
+                gps.ns,
+                gps.decimal_longitude(),
+                gps.ew,
+                gps.altitude,
+            )
+            ) {
+            Ok(()) => log.log(LogType::Info, "SSDV Image info added."),
+            Err(e) => log.log(LogType::Error, &format!("SSDV Image info adding error {:?}", e)),
+        };
 
+        let mut ssdv: SSDV = SSDV::new(
+    		config.path_main_dir.clone()
+                + &config.path_images_dir.clone()
+                + &config.ssdv_name.clone(),
+            config.path_main_dir.clone()
+                + &config.path_images_dir.clone(),
+			config.ssdv_name.clone(),
+			config.id.clone(),
+			pic.number,
+			);
+  
+        match ssdv.encode() {
+            Ok(()) => log.log(LogType::Info, &format!("SSDV Image {}, Packets encoded: {}",
+                                ssdv.binaryname, ssdv.packets)),
+	        Err(e) => log.log(LogType::Error, &format!("Error encoding SSDV: {:?}", e)),
+        };
+        
         // Send SSDV
+        log.log(LogType::Info, "Sending SSDV image...");
+        for i in 0..ssdv.packets {
+    	    lora.send(&ssdv.get_packet(i).unwrap());
+	        lora.wait_packet_sent();
+            thread::sleep(Duration::from_millis(10));
+        }
+        log.log(LogType::Info, &format!("SSDV Image {} packets sent.", ssdv.packets));
 
         // Wait
         thread::sleep(Duration::from_millis(config.packet_delay as u64 *1000));
