@@ -26,6 +26,7 @@ extern crate rusttype;
 
 use std::time::Duration;
 use std::thread;
+use sysfs_gpio::{Direction, Pin};
 
 // own uses
 mod gps;
@@ -95,9 +96,32 @@ fn main() {
     }
     led.blink();
 
-    // ADC
+    // ADC and battery
     let mut mcp3002: Mcp3002 = Mcp3002::new(config.adc_cs, 0);
     mcp3002.init();
+    
+    let batt_en_pin = Pin::new(config.batt_enable_pin as u64);
+    match batt_en_pin.export() {
+            Ok(()) => {},
+            Err(err) => { 
+                println!("Can't export batt GPIO: {}", err);
+                std::process::exit(1);
+            }
+    }
+    match batt_en_pin.set_direction(Direction::Out) {
+            Ok(()) => {},
+            Err(err) => { 
+                println!("Can't set batt GPIO direction: {}", err);
+                std::process::exit(1);
+            }
+    }
+    match batt_en_pin.set_value(0) {
+            Ok(()) => {},
+            Err(err) => { 
+                println!("Can't set batt GPIO value: {}", err);
+                std::process::exit(1);
+            }
+    }
 
     // Barometer
     let mut baro : Ms5607 =  Ms5607::new(config.baro_i2c_bus, config.baro_addr);
@@ -186,11 +210,18 @@ fn main() {
                 Err(e) => { log.log(LogType::Warn, &format!("Error reading TOUT: {}", e)); 9999.0 },
             };
 
-            // Battery, read ADC channel and make conversion
+            // Battery, enable reading, read ADC channel and make conversion
+            batt_en_pin.set_value(1).unwrap();
+            
+            // wait 1ms for current to stabilize
+            thread::sleep(Duration::from_millis(1));
+
             let adc_batt = match mcp3002.read(config.adc_vbatt) {
                 Ok(n) => { log.log(LogType::Data, &format!("ADC0: {}", n)); n },
                 Err(e) => { log.log(LogType::Warn, &format!("Error reading ADC: {}", e)); 0},
             };
+            
+            batt_en_pin.set_value(0).unwrap();
 
             let mut vbatt: f32 = config.adc_v_mult * config.adc_v_divider
                 * (adc_batt as f32 * 3.3/1023.0);
