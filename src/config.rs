@@ -2,6 +2,7 @@ extern crate ini;
 use ini::Ini;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum ConfigErrorType {
     IO,
     Section,
@@ -38,6 +39,7 @@ pub struct Config {
 
     pub batt_enable_pin: u8,
     pub led_pin: u8,
+    pub pwr_pin: u8,
 
     pub gps_serial_port: String,
     pub gps_speed: u32,
@@ -82,6 +84,7 @@ impl Config {
 
             batt_enable_pin: 0,
             led_pin: 0,
+	    pwr_pin: 0,
 
             gps_serial_port: "".to_string(),
             gps_speed: 0,
@@ -162,7 +165,11 @@ impl Config {
             .unwrap()
             .parse::<u8>()
             .unwrap();
-
+        self.pwr_pin = section_gpio.get("pwr_pin")
+            .unwrap()
+            .parse::<u8>()
+            .unwrap();
+		    
         // get gps section
         let section_gps = match conf.section(Some("gps".to_owned())) {
             Some(s) => s,

@@ -84,6 +84,7 @@ packet_delay = 5
 [gpio]
 batt_enable_pin = 24
 led_pin = 17
+pwr_pin = 26
 
 [gps]
 serial_port = /dev/ttyAMA0

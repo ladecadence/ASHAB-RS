@@ -108,6 +108,7 @@ fn main() {
                 std::process::exit(1);
             }
     }
+
     match batt_en_pin.set_direction(Direction::Out) {
             Ok(()) => {},
             Err(err) => { 
@@ -142,7 +143,38 @@ fn main() {
     }
 
     lora.set_frequency(config.lora_freq);
-    lora.set_tx_power(config.lora_low_pwr);
+
+    // power selection
+    let pwr_pin = Pin::new(config.pwr_pin as u64);
+    match pwr_pin.export() {
+            Ok(()) => {},
+            Err(err) => { 
+                println!("Can't export pwr GPIO: {}", err);
+                std::process::exit(1);
+            }
+    }
+
+    match pwr_pin.set_direction(Direction::In) {
+            Ok(()) => {},
+            Err(err) => { 
+                println!("Can't set pwr GPIO direction: {}", err);
+                std::process::exit(1);
+            }
+    }
+
+    let pwr_sel = match pwr_pin.get_value() {
+            Ok(i) => i,
+            Err(err) => { 
+                println!("Can't get pwr GPIO value: {}", err);
+                std::process::exit(1);
+            }
+    };
+
+    match pwr_sel {
+	0 => lora.set_tx_power(config.lora_low_pwr),
+	1 => lora.set_tx_power(config.lora_high_pwr),
+	_ =>  {},
+    }
 
     // Telemetry object
     let mut telem: Telemetry = Telemetry::new(config.id.clone(),
