@@ -34,6 +34,15 @@ You'll need a RaspberryPi Zero running Raspbian with the following software:
 * Rust: (For development and compilation) $ curl https://sh.rustup.rs -sSf | sh
 * ssdv: https://github.com/fsphil/ssdv -> make && sudo make install
 
+The software can be built using cargo, the rust's package manager:
+
+```
+$ git clone https://github.com/ladecadence/ASHAB-RS.git
+$ cd ASHAB-RS/
+$ cargo build
+
+```
+
 Then put the configuration file (nsx.cfg) in your /home/pi folder 
 (or change the path in mission.rs) and create a folder for the data (defined in nsx.cfg)
 and inside it a pictures/ folder
@@ -47,6 +56,19 @@ Then you'll need to run the binary after the raspberry finishes booting.
 
 
 ## Config file
+
+The configuration file contains all the parameters needed to configure the mission and the hardware used.
+It's format is the typical INI file, divided in several sections for each mission parameter and hardware.
+
+* [mission] : mission identifiers, telemetry format and intervals.
+* [gpio]: general GPIO used by the software (check StratoZero pins).
+* [gps]: gps port and baudrate.
+* [lora]: lora radio SPI bus and configuration.
+* [adc]: Analog to digital converter bus and battery calibration.
+* [temp]: temperature sensors addresses.
+* [baro]: barometer i2c configuration.
+* [paths]: general paths for mission logs and images
+* [ssdv]: SSDV image configuration.
 
 An example of a config file:
 
