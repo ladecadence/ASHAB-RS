@@ -275,7 +275,7 @@ impl Config {
         // convert from hex
         self.baro_addr = u16::from_str_radix(section_baro.get("i2c_addr")
                                              .unwrap()
-                                             .trim_left_matches("0x"), 16)
+                                             .trim_start_matches("0x"), 16)
             .unwrap();
 
         // get path section
