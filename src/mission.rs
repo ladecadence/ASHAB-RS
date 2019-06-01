@@ -171,9 +171,9 @@ fn main() {
     };
 
     match pwr_sel {
-	0 => lora.set_tx_power(config.lora_low_pwr),
-	1 => lora.set_tx_power(config.lora_high_pwr),
-	_ =>  {},
+        0 => lora.set_tx_power(config.lora_low_pwr),
+        1 => lora.set_tx_power(config.lora_high_pwr),
+        _ =>  {},
     }
 
     // Telemetry object
