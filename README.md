@@ -34,6 +34,8 @@ You'll need a RaspberryPi Zero running Raspbian with the following software:
 * Rust: (For development and compilation) $ curl https://sh.rustup.rs -sSf | sh
 * ssdv: https://github.com/fsphil/ssdv -> make && sudo make install
 
+Also in raspi-config, you need to enable the i2c, spi, 1-wire and serial interfaces (serial interface WITHOUT console output).
+
 The software can be built using cargo, the rust's package manager:
 
 ```
