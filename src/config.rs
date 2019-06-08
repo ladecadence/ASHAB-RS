@@ -122,31 +122,61 @@ impl Config {
             Err(_e) => return Err(ConfigError::new(
                     ConfigErrorType::IO, 
                     "Can't open config file")
-                                 ),
+                    ),
         };
+
         // get mission section
         let section_mission = match conf.section(Some("mission".to_owned())) {
             Some(s) => s,
             None => return Err(ConfigError::new(
                     ConfigErrorType::Section, 
                     "Section mission not found")
-                              ),
+                    ),
         };
 
-        self.id = section_mission.get("id").unwrap().to_string();
-        self.subid = section_mission.get("subid").unwrap().to_string();
-        self.msg = section_mission.get("msg").unwrap().to_string();
-        self.separator = section_mission.get("separator")
-            .unwrap()
-            .to_string();
-        self.packet_repeat = section_mission.get("packet_repeat")
-            .unwrap()
-            .parse::<u32>()
-            .unwrap();
-        self.packet_delay = section_mission.get("packet_delay")
-            .unwrap()
-            .parse::<u32>()
-            .unwrap();
+        self.id = match section_mission.get("id") {
+			Some(p) => p.to_string(),
+			None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter mission id not found")
+				),
+		};
+
+        self.subid = match section_mission.get("subid") {
+			Some(p) => p.to_string(),
+			None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter mission subid not found")
+				),
+		};
+        self.msg = match section_mission.get("msg") {
+			Some(p) => p.to_string(),
+			None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter mission msg not found")
+				),
+		};
+        self.separator = match section_mission.get("separator") {
+		Some(p) => p.to_string(),
+		None => return Err(ConfigError::new(
+			ConfigErrorType::Parameter,
+			"Parameter mission separator not found")
+			),
+		};
+        self.packet_repeat = match section_mission.get("packet_repeat") {
+			Some(p) => p.parse::<u32>().unwrap_or(0),
+			None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter mission packet_repeat not found")
+				),
+		};
+        self.packet_delay = match section_mission.get("packet_delay") {
+       		Some(p) => p.parse::<u32>().unwrap_or(0),
+			None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter mission packet_delay not found")
+				),
+		};
 
         // get gpio section
         let section_gpio = match conf.section(Some("gpio".to_owned())) {
@@ -154,21 +184,30 @@ impl Config {
             None => return Err(ConfigError::new(
                     ConfigErrorType::Section, 
                     "Section gpio not found")
-                              ),
+                    ),
         };
 
-        self.batt_enable_pin = section_gpio.get("batt_enable_pin")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
-        self.led_pin = section_gpio.get("led_pin")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
-        self.pwr_pin = section_gpio.get("pwr_pin")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
+        self.batt_enable_pin = match section_gpio.get("batt_enable_pin") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter gpio batt_enable_pin not found")
+				),
+		};
+        self.led_pin = match section_gpio.get("led_pin") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter gpio led_pin not found")
+				),
+		};
+        self.pwr_pin = match section_gpio.get("pwr_pin") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter gpio pwr_pin not found")
+				),
+		};
 		    
         // get gps section
         let section_gps = match conf.section(Some("gps".to_owned())) {
@@ -176,16 +215,23 @@ impl Config {
             None => return Err(ConfigError::new(
                     ConfigErrorType::Section, 
                     "Section gps not found")
-                              ),
+                    ),
         };
 
-        self.gps_serial_port = section_gps.get("serial_port")
-            .unwrap()
-            .to_string();
-        self.gps_speed = section_gps.get("speed")
-            .unwrap()
-            .parse::<u32>()
-            .unwrap();
+        self.gps_serial_port = match section_gps.get("serial_port") {
+            Some(p) => p.to_string(),
+	   		None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter serial_port not found")
+				),
+		};
+        self.gps_speed = match section_gps.get("speed") {
+        	Some(p) => p.parse::<u32>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter speed not found")
+				),
+		};
 
         // get lora section
         let section_lora = match conf.section(Some("lora".to_owned())) {
@@ -193,29 +239,44 @@ impl Config {
             None => return Err(ConfigError::new(
                     ConfigErrorType::Section, 
                     "Section lora not found")
-                              ),
+                    ),
         };
 
-        self.lora_cs = section_lora.get("cs")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
-        self.lora_int_pin = section_lora.get("int_pin")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
-        self.lora_freq = section_lora.get("freq")
-            .unwrap()
-            .parse::<f32>()
-            .unwrap();
-        self.lora_low_pwr = section_lora.get("low_pwr")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
-        self.lora_high_pwr = section_lora.get("high_pwr")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
+        self.lora_cs = match section_lora.get("cs") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter lora cs not found")
+				),
+		};
+        self.lora_int_pin = match section_lora.get("int_pin") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter lora cs not found")
+				),
+		};
+        self.lora_freq = match section_lora.get("freq") {
+            Some(p) => p.parse::<f32>().unwrap_or(0.0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter lora int_pin not found")
+				),
+		};
+        self.lora_low_pwr = match section_lora.get("low_pwr") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter lora low_pwr not found")
+				),
+		};
+        self.lora_high_pwr = match section_lora.get("high_pwr") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter lora high_pwr not found")
+				),
+		};
 
         // get adc section
         let section_adc = match conf.section(Some("adc".to_owned())) {
@@ -226,22 +287,34 @@ impl Config {
                               ),
         };
 
-        self.adc_cs = section_adc.get("cs")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
-        self.adc_vbatt = section_adc.get("vbatt")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
-        self.adc_v_divider = section_adc.get("v_divider")
-            .unwrap()
-            .parse::<f32>()
-            .unwrap();
-        self.adc_v_mult = section_adc.get("v_mult")
-            .unwrap()
-            .parse::<f32>()
-            .unwrap();
+        self.adc_cs = match section_adc.get("cs") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter adc cs not found")
+				),
+		};
+        self.adc_vbatt = match section_adc.get("vbatt") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter adc vbatt not found")
+				),
+		};
+        self.adc_v_divider = match section_adc.get("v_divider") {
+            Some(p) => p.parse::<f32>().unwrap_or(0.0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter adc v_divider not found")
+				),
+		};
+        self.adc_v_mult = match section_adc.get("v_mult") {
+            Some(p) => p.parse::<f32>().unwrap_or(0.0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter adc v_mult not found")
+				),
+		};
 
         // get temp section
         let section_temp = match conf.section(Some("temp".to_owned())) {
@@ -249,15 +322,23 @@ impl Config {
             None => return Err(ConfigError::new(
                     ConfigErrorType::Section, 
                     "Section temp not found")
-                              ),
+                    ),
         };
 
-        self.temp_internal_addr = section_temp.get("internal_addr")
-            .unwrap()
-            .to_string();
-        self.temp_external_addr = section_temp.get("external_addr")
-            .unwrap()
-            .to_string();
+        self.temp_internal_addr = match section_temp.get("internal_addr") {
+            Some(p) => p.to_string(),
+	   		None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter temp internal_addr not found")
+				),
+		};
+        self.temp_external_addr = match section_temp.get("external_addr") {
+            Some(p) => p.to_string(),
+	   		None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter temp external_addr not found")
+				),
+		};
 
         // get baro section
         let section_baro = match conf.section(Some("baro".to_owned())) {
@@ -265,18 +346,24 @@ impl Config {
             None => return Err(ConfigError::new(
                     ConfigErrorType::Section, 
                     "Section baro not found")
-                              ),
+                    ),
         };
 
-        self.baro_i2c_bus = section_baro.get("i2c_bus")
-            .unwrap()
-            .parse::<u8>()
-            .unwrap();
+        self.baro_i2c_bus = match section_baro.get("i2c_bus") {
+            Some(p) => p.parse::<u8>().unwrap_or(0),
+	    	None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter baro i2c_bus not found")
+				),
+		};
         // convert from hex
-        self.baro_addr = u16::from_str_radix(section_baro.get("i2c_addr")
-                                             .unwrap()
-                                             .trim_start_matches("0x"), 16)
-            .unwrap();
+      	self.baro_addr = match section_baro.get("i2c_addr") {
+			Some(s) => u16::from_str_radix(s.trim_start_matches("0x"), 16).unwrap(),
+			None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter baro i2c_addr not found")
+				),
+		};
 
         // get path section
         let section_path = match conf.section(Some("paths".to_owned())) {
@@ -287,15 +374,27 @@ impl Config {
                               ),
         };
 
-        self.path_main_dir = section_path.get("main_dir")
-            .unwrap()
-            .to_string();
-        self.path_images_dir = section_path.get("images_dir")
-            .unwrap()
-            .to_string();
-        self.path_log = section_path.get("log")
-            .unwrap()
-            .to_string();
+        self.path_main_dir = match section_path.get("main_dir") {
+            Some(p) => p.to_string(),
+	   		None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter path main_dir not found")
+				),
+		};
+        self.path_images_dir = match section_path.get("images_dir") {
+            Some(p) => p.to_string(),
+	   		None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter path images_dir not found")
+				),
+		};
+        self.path_log = match section_path.get("log") {
+            Some(p) => p.to_string(),
+	   		None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter path log not found")
+				),
+		};
 
         // get ssdv section
         let section_ssdv = match conf.section(Some("ssdv".to_owned())) {
@@ -306,8 +405,20 @@ impl Config {
                               ),
         };
 
-        self.ssdv_size = section_ssdv.get("size").unwrap().to_string();
-        self.ssdv_name = section_ssdv.get("name").unwrap().to_string();
+        self.ssdv_size = match section_ssdv.get("size") {
+			Some(p) => p.to_string(),
+	   		None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter ssdv size not found")
+				),
+		};
+        self.ssdv_name = match section_ssdv.get("name") {
+			Some(p) => p.to_string(),
+	   		None => return Err(ConfigError::new(
+				ConfigErrorType::Parameter,
+				"Parameter ssdv name not found")
+				),
+		};
 
         self.initialized = true;
         Ok(())
