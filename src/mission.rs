@@ -86,7 +86,13 @@ fn main() {
     // Ok, now start the peripherals using parameters from config file
     // GPS
     let mut gps: GPS =  GPS::new(&config.gps_serial_port, config.gps_speed);
-    gps.config().unwrap();
+    match gps.config() {
+    	Ok(()) = {},
+	Err(e) => {
+		println!("Can't open/configure GPS port");
+		std::process::exit(1);
+		}
+    };
 
     // Status LED
     let mut led: LED = LED::new(config.led_pin);
