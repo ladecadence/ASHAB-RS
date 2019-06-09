@@ -1,8 +1,8 @@
 extern crate chrono;
 
 use chrono::prelude::*;
-use std::io::prelude::*;
 use std::fs::OpenOptions;
+use std::io::prelude::*;
 
 #[allow(dead_code)]
 pub enum LogType {
@@ -17,13 +17,11 @@ pub struct Log {
     pub filename: String,
 }
 
-
 impl Log {
-    pub fn new (f: &str) -> Log {
+    pub fn new(f: &str) -> Log {
         Log {
             filename: String::from(f),
         }
-
     }
 
     pub fn init(&mut self) {
@@ -32,15 +30,17 @@ impl Log {
             .create(true)
             .truncate(true)
             .write(true)
-            .open(self.filename.as_str()).unwrap();
+            .open(self.filename.as_str())
+            .unwrap();
     }
 
-    pub fn log (&mut self, t: LogType, msg: &str) {
+    pub fn log(&mut self, t: LogType, msg: &str) {
         // open file for append
         let mut f = OpenOptions::new()
             .append(true)
             .create(true)
-            .open(self.filename.as_str()).unwrap();
+            .open(self.filename.as_str())
+            .unwrap();
         // log msg
         match t {
             LogType::Data => f.write_all(b"DATA::").unwrap(),
@@ -54,6 +54,3 @@ impl Log {
         f.write_all(b"\n").unwrap();
     }
 }
-
-
-

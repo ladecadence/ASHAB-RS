@@ -1,7 +1,7 @@
-use std::io::prelude::*;
-use std::io;
-use std::io::BufReader;
 use std::fs::File;
+use std::io;
+use std::io::prelude::*;
+use std::io::BufReader;
 use std::str::FromStr;
 
 #[allow(dead_code)]
@@ -10,16 +10,14 @@ pub struct DS18B20 {
     pub temp: f32,
 }
 
-
 impl DS18B20 {
-    pub fn new (dev: &str) -> DS18B20 {
+    pub fn new(dev: &str) -> DS18B20 {
         DS18B20 {
-            device: String::from("/sys/bus/w1/devices/") 
-                + String::from(dev).as_str() 
+            device: String::from("/sys/bus/w1/devices/")
+                + String::from(dev).as_str()
                 + String::from("/w1_slave").as_str(),
             temp: 999.99,
         }
-
     }
 
     pub fn read(&mut self) -> Result<f32, io::Error> {
@@ -47,5 +45,3 @@ impl DS18B20 {
         Ok(self.temp)
     }
 }
-
-

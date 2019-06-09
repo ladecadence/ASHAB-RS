@@ -1,8 +1,8 @@
-use std::process::{Command, Stdio};
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::SeekFrom;
+use std::process::{Command, Stdio};
 
 // ssdv program
 // https://github.com/fsphil/ssdv
@@ -23,12 +23,9 @@ pub struct SSDVError {
 
 impl SSDVError {
     pub fn new(e: SSDVErrorType) -> SSDVError {
-        SSDVError {
-            error_type: e,
-        }
+        SSDVError { error_type: e }
     }
 }
-
 
 pub struct SSDV {
     pub image_file: String,
@@ -40,12 +37,12 @@ pub struct SSDV {
 }
 
 impl SSDV {
-    pub fn new (img: String, p: String, b: String, i: String, cnt: u8) -> SSDV {
+    pub fn new(img: String, p: String, b: String, i: String, cnt: u8) -> SSDV {
         SSDV {
-            image_file : img.clone(),
-            id : i,
-            count : cnt,
-            filename : img.clone(), 
+            image_file: img.clone(),
+            id: i,
+            count: cnt,
+            filename: img.clone(),
             binaryname: p.clone() + &b + ".bin",
             packets: 0,
         }
@@ -75,15 +72,14 @@ impl SSDV {
                 Ok(f) => {
                     // get number of packets of the file
                     self.packets = f.len() / 256;
-                    return Ok(()); 
-                },
+                    return Ok(());
+                }
                 Err(_e) => return Err(SSDVError::new(SSDVErrorType::IO)),
             };
         } else {
             // exit code not 0
             return Err(SSDVError::new(SSDVErrorType::External));
         }
-
     }
 
     pub fn get_packet(&mut self, packet: u64) -> Result<[u8; 255], SSDVError> {
@@ -102,14 +98,13 @@ impl SSDV {
             Ok(mut f) => {
                 // move the cursor, we can unwrap as we already checked number of packets
                 // don't read first byte from packet (sync byte)
-                f.seek(SeekFrom::Start((packet*256)+1)).unwrap();
+                f.seek(SeekFrom::Start((packet * 256) + 1)).unwrap();
                 // read the buffer
                 let mut buf = [0; 255];
                 f.read(&mut buf).unwrap();
                 return Ok(buf);
-            },
+            }
             Err(_e) => return Err(SSDVError::new(SSDVErrorType::IO)),
         };
     }
 }
-
