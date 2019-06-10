@@ -30,7 +30,13 @@ pub struct Ms5607 {
 impl Ms5607 {
     pub fn new(b: u8, a: u16) -> Ms5607 {
         Ms5607 {
-            bus: LinuxI2CDevice::new(format!("/dev/i2c-{}", b), a).unwrap(),
+            bus: match LinuxI2CDevice::new(format!("/dev/i2c-{}", b), a) {
+                Ok(b) => b,
+                Err(e) => { 
+                    println!("Problem opening i2c bus {:?}", e); 
+                    std::process::exit(1);
+                },
+            },
             addr: a,
             prom: [0, 0, 0, 0, 0, 0, 0],
             temp: 0,
