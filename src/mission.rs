@@ -91,7 +91,7 @@ fn main() {
     match gps.config() {
         Ok(()) => {}
         Err(e) => {
-            println!("Can't open/configure GPS port");
+            println!("Can't open/configure GPS port: {:?}", e);
             std::process::exit(1);
         }
     };
