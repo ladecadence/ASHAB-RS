@@ -13,15 +13,15 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program.  
+// along with this program.
 // If not, see <http://www.gnu.org/licenses/>.
 
 #![allow (dead_code)]
 extern crate spidev;
 extern crate sysfs_gpio;
 
-use std::io::prelude::*;
 use spidev::{Spidev, SpidevOptions, SpidevTransfer, SPI_MODE_0};
+use std::io::prelude::*;
 use std::{thread, time};
 use sysfs_gpio::{Direction, Pin};
 
@@ -210,10 +210,10 @@ const PA_DAC_ENABLE: u8 = 0x07;
 const MAX_MESSAGE_LEN: u8 = 255;
 
 // default params;
-const BW125_CR45_SF128 : (u8, u8, u8) =  (0x72, 0x74, 0x00);
-const BW500_CR45_SF128 : (u8, u8, u8) =  (0x92, 0x74, 0x00);
-const BW31_25_CR48_SF512 : (u8, u8, u8) =  (0x48, 0x94, 0x00);
-const BW125_CR48_SF4096 : (u8, u8, u8) =  (0x78, 0xc4, 0x00);
+const BW125_CR45_SF128: (u8, u8, u8) = (0x72, 0x74, 0x00);
+const BW500_CR45_SF128: (u8, u8, u8) = (0x92, 0x74, 0x00);
+const BW31_25_CR48_SF512: (u8, u8, u8) = (0x48, 0x94, 0x00);
+const BW125_CR48_SF4096: (u8, u8, u8) = (0x78, 0xc4, 0x00);
 
 // SPI;
 const SPI_WRITE_MASK: u8 = 0x80;
@@ -226,7 +226,6 @@ const RADIO_MODE_IDLE: u8 = 2;
 const RADIO_MODE_TX: u8 = 3;
 const RADIO_MODE_RX: u8 = 4;
 const RADIO_MODE_CAD: u8 = 5;
-
 
 #[allow(dead_code)]
 pub struct RF95 {
@@ -248,11 +247,11 @@ pub struct RF95 {
 }
 
 impl RF95 {
-    pub fn new(ch: u8, int: u8, use_i: bool) -> RF95 { 
+    pub fn new(ch: u8, int: u8, use_i: bool) -> RF95 {
         RF95 {
-            mode : RADIO_MODE_INITIALISING,
-            buf : [0; 256],
-            buflen : 0,
+            mode: RADIO_MODE_INITIALISING,
+            buf: [0; 256],
+            buflen: 0,
             last_rssi: -99,
             rx_bad: 0,
             rx_good: 0,
@@ -260,13 +259,11 @@ impl RF95 {
             rx_buf_valid: false,
             channel: ch,
             int_pin_number: int,
-            spidev: Spidev::open(String::from("/dev/spidev0.") 
-                                 + &ch.to_string()).unwrap(),
-                                 int_pin: Pin::new(int as u64),
-                                 use_int: use_i,
-                                 int_thread: thread::Builder::new()
-                                     .name("rf95_int".into()),
-                                 cad: 0,
+            spidev: Spidev::open(String::from("/dev/spidev0.") + &ch.to_string()).unwrap(),
+            int_pin: Pin::new(int as u64),
+            use_int: use_i,
+            int_thread: thread::Builder::new().name("rf95_int".into()),
+            cad: 0,
         }
     }
 
@@ -279,7 +276,7 @@ impl RF95 {
     pub fn spi_read(&mut self, reg: u8) -> u8 {
         let mut rx = [0_u8, 2];
         let tx: [u8; 2] = [reg, 0];
-        { 
+        {
             let mut transfer = SpidevTransfer::read_write(&tx, &mut rx);
             self.spidev.transfer(&mut transfer).unwrap();
         }
@@ -312,9 +309,8 @@ impl RF95 {
         return data;
     }
 
-    // configure SPI bus and RF95 LoRa default mode 
+    // configure SPI bus and RF95 LoRa default mode
     pub fn init(&mut self) -> Result<(), &'static str> {
-
         // configure SPI and initialize RF95
         let options = SpidevOptions::new()
             .bits_per_word(8)
@@ -353,11 +349,11 @@ impl RF95 {
     }
 
     pub fn set_frequency(&mut self, freq: f32) {
-        let freq_value: i32 = ((freq * 1000000.0) / FSTEP ) as i32;
+        let freq_value: i32 = ((freq * 1000000.0) / FSTEP) as i32;
 
-        self.spi_write(REG_06_FRF_MSB, ((freq_value>>16)&0xff) as u8);
-        self.spi_write(REG_07_FRF_MID, ((freq_value>>8)&0xff) as u8);
-        self.spi_write(REG_08_FRF_LSB, ((freq_value)&0xff) as u8);
+        self.spi_write(REG_06_FRF_MSB, ((freq_value >> 16) & 0xff) as u8);
+        self.spi_write(REG_07_FRF_MID, ((freq_value >> 8) & 0xff) as u8);
+        self.spi_write(REG_08_FRF_LSB, ((freq_value) & 0xff) as u8);
     }
 
     pub fn set_mode_idle(&mut self) {
@@ -405,16 +401,15 @@ impl RF95 {
         // A_DAC_ENABLE actually adds about 3dBm to all
         // power levels. We will us it for 21, 22 and 23dBm
 
-        if power>20 {
+        if power > 20 {
             self.spi_write(REG_4D_PA_DAC, PA_DAC_ENABLE);
             power = power - 3;
-        }
-        else {
+        } else {
             self.spi_write(REG_4D_PA_DAC, PA_DAC_DISABLE);
         }
 
         // write it
-        self.spi_write(REG_09_PA_CONFIG, PA_SELECT | (power-5));
+        self.spi_write(REG_09_PA_CONFIG, PA_SELECT | (power - 5));
     }
 
     // set mode from default modes
@@ -424,32 +419,36 @@ impl RF95 {
         self.spi_write(REG_26_MODEM_CONFIG3, mode.2);
     }
 
-    pub fn set_modem_config_custom(&mut self, bandwidth: u8, 
-                                   coding_rate: u8, 
-                                   implicit_header: u8, 
-                                   spreading_factor: u8, 
-                                   crc: u8,
-                                   continuous_tx: u8, 
-                                   timeout: u8, 
-                                   agc_auto: u8) {
-
-        self.spi_write(REG_1D_MODEM_CONFIG1, 
-                       bandwidth | coding_rate | implicit_header);
-        self.spi_write(REG_1E_MODEM_CONFIG2,
-                       spreading_factor | continuous_tx | crc | timeout);
+    pub fn set_modem_config_custom(
+        &mut self,
+        bandwidth: u8,
+        coding_rate: u8,
+        implicit_header: u8,
+        spreading_factor: u8,
+        crc: u8,
+        continuous_tx: u8,
+        timeout: u8,
+        agc_auto: u8,
+    ) {
+        self.spi_write(
+            REG_1D_MODEM_CONFIG1,
+            bandwidth | coding_rate | implicit_header,
+        );
+        self.spi_write(
+            REG_1E_MODEM_CONFIG2,
+            spreading_factor | continuous_tx | crc | timeout,
+        );
         self.spi_write(REG_26_MODEM_CONFIG3, agc_auto);
     }
-
 
     pub fn set_preamble_length(&mut self, len: u16) {
         self.spi_write(REG_20_PREAMBLE_MSB, (len >> 8) as u8);
         self.spi_write(REG_21_PREAMBLE_LSB, (len & 0xff) as u8);
     }
 
-
     // Send data
-    pub fn send(&mut self, data: &[u8]) -> bool{
-        if data.len() > MAX_MESSAGE_LEN  as usize {
+    pub fn send(&mut self, data: &[u8]) -> bool {
+        if data.len() > MAX_MESSAGE_LEN as usize {
             return false;
         }
 
@@ -471,14 +470,13 @@ impl RF95 {
 
     pub fn wait_packet_sent(&mut self) -> bool {
         if !self.use_int {
-
-            // If we are not currently in transmit mode, 
+            // If we are not currently in transmit mode,
             // there is no packet to wait for
             if self.mode != RADIO_MODE_TX {
                 return false;
             }
 
-            while (self.spi_read(REG_12_IRQ_FLAGS) & TX_DONE ) == 0 {
+            while (self.spi_read(REG_12_IRQ_FLAGS) & TX_DONE) == 0 {
                 thread::sleep(time::Duration::from_millis(10));
             }
 
@@ -490,9 +488,7 @@ impl RF95 {
             self.set_mode_idle();
 
             return true;
-
         } else {
-
             while self.mode == RADIO_MODE_TX {
                 thread::sleep(time::Duration::from_millis(10));
             }
@@ -507,7 +503,6 @@ impl RF95 {
             let irq_flags = self.spi_read(REG_12_IRQ_FLAGS);
 
             if (self.mode == RADIO_MODE_RX) && (irq_flags & RX_DONE != 0) {
-
                 // Have received a packet
                 let length = self.spi_read(REG_13_RX_NB_BYTES);
 
@@ -522,8 +517,7 @@ impl RF95 {
                 // Remember the RSSI of this packet
                 // this is according to the doc, but is it really correct?
                 // weakest receiveable signals are reported RSSI at about -66
-                self.last_rssi = (self.spi_read(REG_1A_PKT_RSSI_VALUE) as i16)
-                    - 137;
+                self.last_rssi = (self.spi_read(REG_1A_PKT_RSSI_VALUE) as i16) - 137;
 
                 // We have received a message.
                 // validateRxBuf();  TO BE IMPLEMENTED
@@ -532,12 +526,10 @@ impl RF95 {
                 if self.rx_buf_valid {
                     self.set_mode_idle();
                 }
-            } else if (self.mode == RADIO_MODE_CAD) 
-                && (irq_flags & CAD_DONE != 0) {
-
-                    self.cad = irq_flags & CAD_DETECTED;
-                    self.set_mode_idle();
-                }
+            } else if (self.mode == RADIO_MODE_CAD) && (irq_flags & CAD_DONE != 0) {
+                self.cad = irq_flags & CAD_DETECTED;
+                self.set_mode_idle();
+            }
 
             self.spi_write(REG_12_IRQ_FLAGS, 0xff); // Clear all IRQ flags
 
@@ -547,8 +539,7 @@ impl RF95 {
 
             self.set_mode_rx();
             return Ok(self.rx_buf_valid);
-        }
-        else {
+        } else {
             return Ok(false);
         }
     }
@@ -557,8 +548,4 @@ impl RF95 {
         self.rx_buf_valid = false;
         self.buflen = 0;
     }
-
-
-
 }
-

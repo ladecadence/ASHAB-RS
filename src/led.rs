@@ -1,7 +1,7 @@
 extern crate sysfs_gpio;
-use sysfs_gpio::{Direction, Pin};
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
+use sysfs_gpio::{Direction, Pin};
 
 #[allow(dead_code)]
 pub struct LED {
@@ -9,7 +9,7 @@ pub struct LED {
 }
 
 impl LED {
-    pub fn new(p: u8) -> LED { 
+    pub fn new(p: u8) -> LED {
         LED {
             pin: Pin::new(p as u64),
         }
@@ -18,18 +18,18 @@ impl LED {
     pub fn init(&mut self) -> Result<(), &'static str> {
         // export the pin and set it as an output
         match self.pin.export() {
-            Ok(()) => {},
+            Ok(()) => {}
             Err(_err) => return Err("Can't export pin"),
         }
 
         match self.pin.set_direction(Direction::Out) {
-            Ok(()) => {},
+            Ok(()) => {}
             Err(_err) => return Err("Can't set gpio direction"),
         }
 
         // pull the pin low
         match self.pin.set_value(0) {
-            Ok(()) => {},
+            Ok(()) => {}
             Err(_err) => return Err("Can't set pin value"),
         }
 
@@ -51,6 +51,3 @@ impl LED {
         }
     }
 }
-
-
-
