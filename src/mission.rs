@@ -87,8 +87,8 @@ fn main() {
     // GPS
     let mut gps: GPS =  GPS::new(&config.gps_serial_port, config.gps_speed);
     match gps.config() {
-    	Ok(()) = {},
-	Err(e) => {
+    	Ok(()) => {},
+	Err(_e) => {
 		println!("Can't open/configure GPS port");
 		std::process::exit(1);
 		}
