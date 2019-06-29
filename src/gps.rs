@@ -64,9 +64,9 @@ pub struct GPS {
 impl GPS {
     pub fn new (port_name: &str, speed: u32) -> GPS { 
         GPS {
-            latitude : 4331.50,
+            latitude : 4332.94,
             ns : 'N',
-            longitude : 00536.76,
+            longitude : 00539.78,
             ew : 'W',
             altitude : 0.0,
             sats : 0,
