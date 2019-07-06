@@ -60,11 +60,11 @@ pub struct GPS {
 
 #[allow(dead_code)]
 impl GPS {
-    pub fn new(port_name: &str, speed: u32) -> GPS {
+    pub fn new(port_name: &str, port_speed: u32) -> GPS {
         GPS {
-            latitude: 4331.50,
+            latitude: 4332.94,
             ns: 'N',
-            longitude: 00536.76,
+            longitude: 00539.78,
             ew: 'W',
             altitude: 0.0,
             sats: 0,
@@ -75,7 +75,7 @@ impl GPS {
             date: String::from(""),
             port: serial::open(port_name),
             settings: serial::PortSettings {
-                baud_rate: BaudRate::from_speed(speed as usize),
+                baud_rate: BaudRate::from_speed(port_speed as usize),
                 char_size: serial::Bits8,
                 parity: serial::ParityNone,
                 stop_bits: serial::Stop1,
@@ -89,6 +89,7 @@ impl GPS {
             Err(_e) => return Err(GpsError::new(GpsErrorType::Open)),
             Ok(_) => {}
         }
+
         self.port
             .as_mut()
             .unwrap()

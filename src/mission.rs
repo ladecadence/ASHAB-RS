@@ -24,7 +24,7 @@ extern crate spidev;
 extern crate sysfs_gpio;
 
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use sysfs_gpio::{Direction, Pin};
 
 // own uses
@@ -66,6 +66,357 @@ use ssdv::*;
 
 const CONFIG_FILE: &'static str = "/home/pi/nsx.cfg";
 
+// MISSION STRUCT
+//////////////////
+
+struct Mission {
+    log: Log,
+    gps: GPS,
+    led: LED,
+    mcp3002: Mcp3002,
+    batt_en_pin: Pin,
+    baro: Ms5607,
+    temp_internal: DS18B20,
+    temp_external: DS18B20,
+    lora: RF95,
+    pwr_pin: Pin,
+    pwr_sel: u8,
+    telem: Telemetry,
+    pic: Picture,
+}
+
+impl Mission {
+    pub fn new(conf: &Config) -> Mission {
+        Mission {
+            log: Log::new(),
+            gps: GPS::new(&conf.gps_serial_port, conf.gps_speed),
+            led: LED::new(conf.led_pin),
+            mcp3002: Mcp3002::new(conf.adc_cs, 0),
+            batt_en_pin: Pin::new(conf.batt_enable_pin as u64),
+            baro: Ms5607::new(conf.baro_i2c_bus, conf.baro_addr),
+            temp_internal: DS18B20::new(&conf.temp_internal_addr),
+            temp_external: DS18B20::new(&conf.temp_external_addr),
+            lora: RF95::new(conf.lora_cs, conf.lora_int_pin, false),
+            pwr_pin: Pin::new(conf.pwr_pin as u64),
+            pwr_sel: 0,
+            telem: Telemetry::new(conf.id.clone(), conf.msg.clone(), conf.separator.clone()),
+            pic: Picture::new(
+                0,
+                "ssdv",
+                &(conf.path_main_dir.clone() + &conf.path_images_dir.clone()),
+            ),
+        }
+    }
+
+    pub fn init(&mut self, conf: &Config) {
+        // Log
+        self.log.init(&conf.path_log);
+        self.log.log(LogType::Info, "NSX starting.");
+
+        // GPS
+        match self.gps.config() {
+            Ok(()) => {}
+            Err(_e) => {
+                println!("Can't open/configure GPS port");
+                std::process::exit(1);
+            }
+        };
+
+        // Status LED
+        match self.led.init() {
+            Ok(()) => {}
+            Err(e) => println!("{}", e),
+        }
+        self.led.blink();
+
+        // ADC and battery
+        self.mcp3002.init();
+
+        match self.batt_en_pin.export() {
+            Ok(()) => {}
+            Err(err) => {
+                println!("Can't export batt GPIO: {}", err);
+                std::process::exit(1);
+            }
+        }
+
+        match self.batt_en_pin.set_direction(Direction::Out) {
+            Ok(()) => {}
+            Err(err) => {
+                println!("Can't set batt GPIO direction: {}", err);
+                std::process::exit(1);
+            }
+        }
+        match self.batt_en_pin.set_value(0) {
+            Ok(()) => {}
+            Err(err) => {
+                println!("Can't set batt GPIO value: {}", err);
+                std::process::exit(1);
+            }
+        }
+
+        // Barometer
+        self.baro.read_prom().unwrap();
+
+        // LoRa radio
+        match self.lora.init() {
+            Ok(()) => println!("LoRa init ok"),
+            Err(e) => {
+                println!("ERROR: {}", e);
+                std::process::exit(1);
+            }
+        }
+
+        self.lora.set_frequency(conf.lora_freq);
+
+        // Power selection
+        match self.pwr_pin.export() {
+            Ok(()) => {}
+            Err(err) => {
+                println!("Can't export pwr GPIO: {}", err);
+                std::process::exit(1);
+            }
+        }
+
+        match self.pwr_pin.set_direction(Direction::In) {
+            Ok(()) => {}
+            Err(err) => {
+                println!("Can't set pwr GPIO direction: {}", err);
+                std::process::exit(1);
+            }
+        }
+
+        self.pwr_sel = match self.pwr_pin.get_value() {
+            Ok(i) => i,
+            Err(err) => {
+                println!("Can't get pwr GPIO value: {}", err);
+                std::process::exit(1);
+            }
+        };
+
+        match self.pwr_sel {
+            0 => self.lora.set_tx_power(conf.lora_low_pwr),
+            1 => self.lora.set_tx_power(conf.lora_high_pwr),
+            _ => {}
+        }
+    }
+
+    pub fn update_telemetry(&mut self, conf: &Config) {
+        // Update sensor data
+        // GPS
+        match self.gps.update() {
+            Ok(()) => {
+                self.log.log(
+                    LogType::Data,
+                    &format!(
+                        "{}N, {}W, Sats: {}",
+                        self.gps.decimal_latitude(),
+                        self.gps.decimal_longitude(),
+                        self.gps.sats
+                    ),
+                );
+            }
+            Err(e) => {
+                match e.error_type {
+                    GpsErrorType::Sats => {
+                        self.log.log(LogType::Warn, "GPS: No hay suficientes sats")
+                    }
+                    GpsErrorType::GGA => self.log.log(
+                        LogType::Warn,
+                        &format!("GPS: Error en la sentencia GGA: {}", self.gps.line_gga),
+                    ),
+                    GpsErrorType::RMC => self
+                        .log
+                        .log(LogType::Warn, "GPS: Error en la sentencia RMC"),
+                    GpsErrorType::Fix => self.log.log(LogType::Warn, "GPS: Error con el Fix"),
+                    GpsErrorType::Parse => self
+                        .log
+                        .log(LogType::Warn, "GPS: Error parseando los datos"),
+                    _ => {}
+                };
+                self.led.err();
+            }
+        }
+
+        // Baro
+        self.baro.update().unwrap();
+        self.log.log(
+            LogType::Data,
+            &format!("BARO: {}", self.baro.get_pres().unwrap()),
+        );
+
+        // Temperatures
+        let t_in = match self.temp_internal.read() {
+            Ok(t) => {
+                self.log.log(LogType::Data, &format!("TIN: {}", t));
+                t
+            }
+            Err(e) => {
+                self.log
+                    .log(LogType::Warn, &format!("Error reading TIN: {}", e));
+                9999.0
+            }
+        };
+
+        let t_out = match self.temp_external.read() {
+            Ok(t) => {
+                self.log.log(LogType::Data, &format!("TOUT: {}", t));
+                t
+            }
+            Err(e) => {
+                self.log
+                    .log(LogType::Warn, &format!("Error reading TOUT: {}", e));
+                9999.0
+            }
+        };
+
+        // Battery, enable reading, read ADC channel and make conversion
+        self.batt_en_pin.set_value(1).unwrap();
+
+        // wait 1ms for current to stabilize
+        thread::sleep(Duration::from_millis(1));
+
+        let adc_batt = match self.mcp3002.read(conf.adc_vbatt) {
+            Ok(n) => {
+                self.log.log(LogType::Data, &format!("ADC0: {}", n));
+                n
+            }
+            Err(e) => {
+                self.log
+                    .log(LogType::Warn, &format!("Error reading ADC: {}", e));
+                0
+            }
+        };
+
+        self.batt_en_pin.set_value(0).unwrap();
+
+        let vbatt: f32 =
+            conf.adc_v_mult * conf.adc_v_divider * (adc_batt as f32 * 3.3 / 1023.0);
+        self.log.log(LogType::Data, &format!("VBATT: {}", vbatt));
+
+        // Create telemetry packet
+        self.telem.update(
+            self.gps.latitude,
+            self.gps.ns,
+            self.gps.longitude,
+            self.gps.ew,
+            self.gps.altitude,
+            self.gps.heading,
+            self.gps.speed,
+            self.gps.sats,
+            vbatt,
+            self.baro.get_pres().unwrap(),
+            t_in,
+            t_out,
+        );
+    }
+
+    pub fn send_telemetry(&mut self) {
+        // Send telemetry
+        self.log.log(LogType::Info, "Sending telemetry packet...");
+        self.lora.send(self.telem.aprs_string().as_bytes());
+        self.lora.wait_packet_sent();
+        self.log.log(LogType::Info, "Telemetry packet sent.");
+        self.led.blink();
+    }
+
+    pub fn send_ssdv(&mut self, conf: &Config) {
+        // Take picture
+        match self.pic.capture() {
+            Ok(()) => self.log.log(
+                LogType::Info,
+                &format!("Picture shot: {}", self.pic.filename),
+            ),
+            Err(e) => self
+                .log
+                .log(LogType::Error, &format!("Error taking picture {:?}", e)),
+        };
+
+        // Take SSDV picture
+        match self
+            .pic
+            .capture_small(conf.ssdv_name.clone(), conf.ssdv_size.clone())
+        {
+            Ok(()) => self.log.log(
+                LogType::Info,
+                &format!("SSDV picture shot: {}", conf.ssdv_name.clone()),
+            ),
+            Err(e) => self.log.log(
+                LogType::Error,
+                &format!("Error taking SSDV picture {:?}", e),
+            ),
+        };
+
+        // Encode SSDV picture
+        match self.pic.add_info(
+            conf.path_main_dir.clone() + &conf.path_images_dir.clone() + &conf.ssdv_name.clone(),
+            conf.id.clone(),
+            conf.subid.clone(),
+            conf.msg.clone(),
+            format!(
+                "{}{}, {}{}, {}m",
+                self.gps.decimal_latitude(),
+                self.gps.ns,
+                self.gps.decimal_longitude(),
+                self.gps.ew,
+                self.gps.altitude,
+            ),
+        ) {
+            Ok(()) => self.log.log(LogType::Info, "SSDV Image info added."),
+            Err(e) => self.log.log(
+                LogType::Error,
+                &format!("SSDV Image info adding error {:?}", e),
+            ),
+        };
+
+        let mut ssdv: SSDV = SSDV::new(
+            conf.path_main_dir.clone() + &conf.path_images_dir.clone() + &conf.ssdv_name.clone(),
+            conf.path_main_dir.clone() + &conf.path_images_dir.clone(),
+            conf.ssdv_name.clone(),
+            conf.id.clone(),
+            self.pic.number,
+        );
+
+        match ssdv.encode() {
+            Ok(()) => self.log.log(
+                LogType::Info,
+                &format!(
+                    "SSDV Image {}, Packets encoded: {}",
+                    ssdv.binaryname, ssdv.packets
+                ),
+            ),
+            Err(e) => self
+                .log
+                .log(LogType::Error, &format!("Error encoding SSDV: {:?}", e)),
+        };
+
+        // Send SSDV
+        self.log.log(LogType::Info, "Sending SSDV image...");
+        // get time
+        let mut last_time = Instant::now();
+        for i in 0..ssdv.packets {
+            self.lora.send(&ssdv.get_packet(i).unwrap());
+            self.lora.wait_packet_sent();
+
+            // check if we need to send telemetry between image packets
+            let now = Instant::now();
+            if now.duration_since(last_time).as_secs() > conf.packet_delay as u64 {
+                self.update_telemetry(&conf);
+                self.send_telemetry();
+                last_time = Instant::now();
+            }
+
+
+            thread::sleep(Duration::from_millis(10));
+        }
+
+        self.log.log(
+            LogType::Info,
+            &format!("SSDV Image {} packets sent.", ssdv.packets),
+        );
+    }
+}
+
 // MAIN
 //////////////////
 
@@ -80,120 +431,9 @@ fn main() {
         }
     };
 
-    // Start logging
-    let mut log: Log = Log::new(&config.path_log);
-    log.init();
-    log.log(LogType::Info, "NSX starting.");
-
-    // Ok, now start the peripherals using parameters from config file
-    // GPS
-    let mut gps: GPS = GPS::new(&config.gps_serial_port, config.gps_speed);
-    match gps.config() {
-        Ok(()) => {}
-        Err(e) => {
-            println!("Can't open/configure GPS port: {:?}", e);
-            std::process::exit(1);
-        }
-    };
-
-    // Status LED
-    let mut led: LED = LED::new(config.led_pin);
-    match led.init() {
-        Ok(()) => {}
-        Err(e) => println!("{}", e),
-    }
-    led.blink();
-
-    // ADC and battery
-    let mut mcp3002: Mcp3002 = Mcp3002::new(config.adc_cs, 0);
-    mcp3002.init();
-
-    let batt_en_pin = Pin::new(config.batt_enable_pin as u64);
-    match batt_en_pin.export() {
-        Ok(()) => {}
-        Err(err) => {
-            println!("Can't export batt GPIO: {}", err);
-            std::process::exit(1);
-        }
-    }
-
-    match batt_en_pin.set_direction(Direction::Out) {
-        Ok(()) => {}
-        Err(err) => {
-            println!("Can't set batt GPIO direction: {}", err);
-            std::process::exit(1);
-        }
-    }
-    match batt_en_pin.set_value(0) {
-        Ok(()) => {}
-        Err(err) => {
-            println!("Can't set batt GPIO value: {}", err);
-            std::process::exit(1);
-        }
-    }
-
-    // Barometer
-    let mut baro: Ms5607 = Ms5607::new(config.baro_i2c_bus, config.baro_addr);
-    baro.read_prom().unwrap();
-
-    // Temperature sensors
-    let mut temp_internal: DS18B20 = DS18B20::new(&config.temp_internal_addr);
-    let mut temp_external: DS18B20 = DS18B20::new(&config.temp_external_addr);
-
-    // LoRa radio
-    let mut lora: RF95 = RF95::new(config.lora_cs, config.lora_int_pin, false);
-    match lora.init() {
-        Ok(()) => println!("LoRa init ok"),
-        Err(e) => {
-            println!("ERROR: {}", e);
-            std::process::exit(1);
-        }
-    }
-
-    lora.set_frequency(config.lora_freq);
-
-    // power selection
-    let pwr_pin = Pin::new(config.pwr_pin as u64);
-    match pwr_pin.export() {
-        Ok(()) => {}
-        Err(err) => {
-            println!("Can't export pwr GPIO: {}", err);
-            std::process::exit(1);
-        }
-    }
-
-    match pwr_pin.set_direction(Direction::In) {
-        Ok(()) => {}
-        Err(err) => {
-            println!("Can't set pwr GPIO direction: {}", err);
-            std::process::exit(1);
-        }
-    }
-
-    let pwr_sel = match pwr_pin.get_value() {
-        Ok(i) => i,
-        Err(err) => {
-            println!("Can't get pwr GPIO value: {}", err);
-            std::process::exit(1);
-        }
-    };
-
-    match pwr_sel {
-        0 => lora.set_tx_power(config.lora_low_pwr),
-        1 => lora.set_tx_power(config.lora_high_pwr),
-        _ => {}
-    }
-
-    // Telemetry object
-    let mut telem: Telemetry =
-        Telemetry::new(config.id.clone(), config.msg.clone(), config.separator);
-
-    // Picture (camera control) object
-    let mut pic: Picture = Picture::new(
-        0,
-        "ssdv",
-        &(config.path_main_dir.clone() + &config.path_images_dir.clone()),
-    );
+    // create mission and configure it
+    let mut mission: Mission = Mission::new(&config);
+    mission.init(&config);
 
     // Ok, now get time from GPS and update system time
 
@@ -203,196 +443,16 @@ fn main() {
         for _i in 0..config.packet_repeat {
             // Check for commands
 
-            // Update sensor data
-            // GPS
-            match gps.update() {
-                Ok(()) => {
-                    log.log(
-                        LogType::Data,
-                        &format!(
-                            "{}N, {}W, Sats: {}",
-                            gps.decimal_latitude(),
-                            gps.decimal_longitude(),
-                            gps.sats
-                        ),
-                    );
-                }
-                Err(e) => {
-                    match e.error_type {
-                        GpsErrorType::Sats => {
-                            log.log(LogType::Warn, "GPS: No hay suficientes sats")
-                        }
-                        GpsErrorType::GGA => log.log(
-                            LogType::Warn,
-                            &format!("GPS: Error en la sentencia GGA: {}", gps.line_gga),
-                        ),
-                        GpsErrorType::RMC => {
-                            log.log(LogType::Warn, "GPS: Error en la sentencia RMC")
-                        }
-                        GpsErrorType::Fix => log.log(LogType::Warn, "GPS: Error con el Fix"),
-                        GpsErrorType::Parse => {
-                            log.log(LogType::Warn, "GPS: Error parseando los datos")
-                        }
-                        _ => {}
-                    };
-                    led.err();
-                }
-            }
-
-            // Baro
-            baro.update().unwrap();
-            log.log(
-                LogType::Data,
-                &format!("BARO: {}", baro.get_pres().unwrap()),
-            );
-
-            // Temperatures
-            let t_in = match temp_internal.read() {
-                Ok(t) => {
-                    log.log(LogType::Data, &format!("TIN: {}", t));
-                    t
-                }
-                Err(e) => {
-                    log.log(LogType::Warn, &format!("Error reading TIN: {}", e));
-                    9999.0
-                }
-            };
-
-            let t_out = match temp_external.read() {
-                Ok(t) => {
-                    log.log(LogType::Data, &format!("TOUT: {}", t));
-                    t
-                }
-                Err(e) => {
-                    log.log(LogType::Warn, &format!("Error reading TOUT: {}", e));
-                    9999.0
-                }
-            };
-
-            // Battery, enable reading, read ADC channel and make conversion
-            batt_en_pin.set_value(1).unwrap();
-
-            // wait 1ms for current to stabilize
-            thread::sleep(Duration::from_millis(1));
-
-            let adc_batt = match mcp3002.read(config.adc_vbatt) {
-                Ok(n) => {
-                    log.log(LogType::Data, &format!("ADC0: {}", n));
-                    n
-                }
-                Err(e) => {
-                    log.log(LogType::Warn, &format!("Error reading ADC: {}", e));
-                    0
-                }
-            };
-
-            batt_en_pin.set_value(0).unwrap();
-
-            let mut vbatt: f32 =
-                config.adc_v_mult * config.adc_v_divider * (adc_batt as f32 * 3.3 / 1023.0);
-            log.log(LogType::Data, &format!("VBATT: {}", vbatt));
-
-            // Create telemetry packet
-            telem.update(
-                gps.latitude,
-                gps.ns,
-                gps.longitude,
-                gps.ew,
-                gps.altitude,
-                gps.heading,
-                gps.speed,
-                gps.sats,
-                vbatt,
-                baro.get_pres().unwrap(),
-                t_in,
-                t_out,
-            );
-
             // Send telemetry
-            log.log(LogType::Info, "Sending telemetry packet...");
-            lora.send(telem.aprs_string().as_bytes());
-            lora.wait_packet_sent();
-            log.log(LogType::Info, "Telemetry packet sent.");
-            led.blink();
+            mission.update_telemetry(&config);
+            mission.send_telemetry();
 
             // Wait
             thread::sleep(Duration::from_millis(config.packet_delay as u64 * 1000));
         }
 
-        // Take picture
-        match pic.capture() {
-            Ok(()) => log.log(LogType::Info, &format!("Picture shot: {}", pic.filename)),
-            Err(e) => log.log(LogType::Error, &format!("Error taking picture {:?}", e)),
-        };
-
-        // Take SSDV picture
-        match pic.capture_small(config.ssdv_name.clone(), config.ssdv_size.clone()) {
-            Ok(()) => log.log(
-                LogType::Info,
-                &format!("SSDV picture shot: {}", config.ssdv_name.clone()),
-            ),
-            Err(e) => log.log(
-                LogType::Error,
-                &format!("Error taking SSDV picture {:?}", e),
-            ),
-        };
-
-        // Encode SSDV picture
-        match pic.add_info(
-            config.path_main_dir.clone()
-                + &config.path_images_dir.clone()
-                + &config.ssdv_name.clone(),
-            config.id.clone(),
-            config.subid.clone(),
-            config.msg.clone(),
-            format!(
-                "{}{}, {}{}, {}m",
-                gps.decimal_latitude(),
-                gps.ns,
-                gps.decimal_longitude(),
-                gps.ew,
-                gps.altitude,
-            ),
-        ) {
-            Ok(()) => log.log(LogType::Info, "SSDV Image info added."),
-            Err(e) => log.log(
-                LogType::Error,
-                &format!("SSDV Image info adding error {:?}", e),
-            ),
-        };
-
-        let mut ssdv: SSDV = SSDV::new(
-            config.path_main_dir.clone()
-                + &config.path_images_dir.clone()
-                + &config.ssdv_name.clone(),
-            config.path_main_dir.clone() + &config.path_images_dir.clone(),
-            config.ssdv_name.clone(),
-            config.id.clone(),
-            pic.number,
-        );
-
-        match ssdv.encode() {
-            Ok(()) => log.log(
-                LogType::Info,
-                &format!(
-                    "SSDV Image {}, Packets encoded: {}",
-                    ssdv.binaryname, ssdv.packets
-                ),
-            ),
-            Err(e) => log.log(LogType::Error, &format!("Error encoding SSDV: {:?}", e)),
-        };
-
-        // Send SSDV
-        log.log(LogType::Info, "Sending SSDV image...");
-        for i in 0..ssdv.packets {
-            lora.send(&ssdv.get_packet(i).unwrap());
-            lora.wait_packet_sent();
-            thread::sleep(Duration::from_millis(10));
-        }
-        log.log(
-            LogType::Info,
-            &format!("SSDV Image {} packets sent.", ssdv.packets),
-        );
+        // send SSDV
+        mission.send_ssdv(&config);
 
         // Wait
         thread::sleep(Duration::from_millis(config.packet_delay as u64 * 1000));

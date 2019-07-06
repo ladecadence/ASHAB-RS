@@ -18,13 +18,14 @@ pub struct Log {
 }
 
 impl Log {
-    pub fn new(f: &str) -> Log {
+    pub fn new() -> Log {
         Log {
-            filename: String::from(f),
+            filename: String::from(""),
         }
     }
 
-    pub fn init(&mut self) {
+    pub fn init(&mut self, f: &str) {
+        self.filename = f.to_string();
         // create new file or erase if it exists
         let _f = OpenOptions::new()
             .create(true)

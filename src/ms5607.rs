@@ -32,8 +32,8 @@ impl Ms5607 {
         Ms5607 {
             bus: match LinuxI2CDevice::new(format!("/dev/i2c-{}", b), a) {
                 Ok(b) => b,
-                Err(e) => { 
-                    println!("Problem opening i2c bus {:?}", e); 
+                Err(e) => {
+                    println!("Problem opening i2c bus {:?}", e);
                     std::process::exit(1);
                 },
             },
