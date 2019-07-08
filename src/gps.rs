@@ -43,6 +43,7 @@ impl GpsError {
 
 #[allow(dead_code)]
 pub struct GPS {
+    pub time: String,
     pub latitude: f32,
     pub ns: char,
     pub longitude: f32,
@@ -62,6 +63,7 @@ pub struct GPS {
 impl GPS {
     pub fn new(port_name: &str, port_speed: u32) -> GPS {
         GPS {
+            time: String::from(""),
             latitude: 4332.94,
             ns: 'N',
             longitude: 00539.78,
@@ -158,6 +160,10 @@ impl GPS {
             }
 
             // ok parse elements if possible, if not provide default values
+            //
+
+            self.time = String::from(gga_data[FIELD_TIME]);
+
             self.latitude = gga_data[FIELD_LAT].parse::<f32>().unwrap_or(0.0);
 
             self.ns = gga_data[FIELD_NS].chars().nth(0).unwrap_or('N');
@@ -194,5 +200,17 @@ impl GPS {
         let fraction = (self.longitude - (degrees * 100.0)) / 60.0;
 
         degrees + fraction
+    }
+
+    pub fn get_time(&self) -> Result<(i32, i32, i32), GpsError> {
+        if self.time.chars().count() == 6 {
+            let hour = self.time[0..2].parse::<i32>().unwrap_or(0);
+            let minute = self.time[2..4].parse::<i32>().unwrap_or(0);
+            let second = self.time[4..].parse::<i32>().unwrap_or(0);
+
+            return Ok((hour,minute,second));
+        }
+
+        Err(GpsError::new(GpsErrorType::Fix))
     }
 }
