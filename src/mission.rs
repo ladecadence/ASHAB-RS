@@ -24,6 +24,7 @@ extern crate spidev;
 extern crate sysfs_gpio;
 
 use std::thread;
+use std::process::Command;
 use std::time::{Duration, Instant};
 use sysfs_gpio::{Direction, Pin};
 
@@ -209,9 +210,11 @@ impl Mission {
                 self.log.log(
                     LogType::Data,
                     &format!(
-                        "{}N, {}W, Sats: {}",
+                        "{}{}, {}{}, Sats: {}",
                         self.gps.decimal_latitude(),
+                        self.gps.ns,
                         self.gps.decimal_longitude(),
+                        self.gps.ew,
                         self.gps.sats
                     ),
                 );
@@ -436,6 +439,41 @@ fn main() {
     mission.init(&config);
 
     // Ok, now get time from GPS and update system time
+    match mission.gps.update() {
+        Ok(()) => {},
+        Err(e) => {
+            mission.log.log(LogType::Error, &format!("Error updating GPS: {:?}", e));
+        }
+    }
+    match mission.gps.get_time() {
+        Ok(time) => {
+            let (hour, min, sec) = time;
+            let status = Command::new("date")
+                .arg("+%T")
+                .arg("-s")
+                .arg(&format!("{:02}:{:02}:{:02}", hour, min, sec))
+                .status();
+            let exit_code: i32;
+            match status {
+                Ok(s) => {
+                    exit_code = s.code().unwrap();
+                    mission.log.log(
+                        LogType::Info,
+                        &format!(
+                            "System time set: {:02}:{:02}:{:02} - {:?}",
+                            hour, min, sec, exit_code
+                        )
+                    );
+                },
+                Err(e) => {
+                    mission.log.log(LogType::Error, &format!("Error setting time: {:?}", e));
+                },
+            }
+        },
+        Err(e) => {
+            mission.log.log(LogType::Error, &format!("Error getting GPS time: {:?}", e));
+        },
+    }
 
     ///////// MAIN LOOP /////////
     loop {
