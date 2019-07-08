@@ -203,7 +203,7 @@ impl GPS {
     }
 
     pub fn get_time(&self) -> Result<(i32, i32, i32), GpsError> {
-        if self.time.chars().count() == 6 {
+        if self.time.chars().count() >= 6 {
             let hour = self.time[0..2].parse::<i32>().unwrap_or(0);
             let minute = self.time[2..4].parse::<i32>().unwrap_or(0);
             let second = self.time[4..].parse::<i32>().unwrap_or(0);
