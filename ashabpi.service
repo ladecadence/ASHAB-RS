@@ -1,0 +1,18 @@
+# Sample service file
+# cp to /lib/systemd/system/
+# and chmod 644 it
+# then reload systemd and enable the service
+# sudo systemctl daemon-reload
+# sudo systemctl enable sample.service
+
+
+[Unit]
+Description=ASHAB-RS High altitude balloon flight software
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/home/pi/ASHAB/ASHAB-RS/target/debug/mission
+
+[Install]
+WantedBy=multi-user.target

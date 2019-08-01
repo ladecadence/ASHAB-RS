@@ -55,6 +55,14 @@ and inside it a pictures/ folder
   * pictures/
 
 Then you'll need to run the binary after the raspberry finishes booting.
+For this you can use the included ashabpi.service systemd file, copy it to /lib/systemd/system/m chmod 644 it, and run
+
+```
+sudo systemctl daemon-reload
+sudo systemctl enable ashabpi.service
+```
+
+
 
 
 ## Config file
