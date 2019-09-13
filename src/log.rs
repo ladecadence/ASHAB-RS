@@ -10,6 +10,7 @@ pub enum LogType {
     Info,
     Warn,
     Error,
+    Clean, // No prefix or timestamp
 }
 
 #[allow(dead_code)]
@@ -48,10 +49,17 @@ impl Log {
             LogType::Info => f.write_all(b"INFO::").unwrap(),
             LogType::Warn => f.write_all(b"WARN::").unwrap(),
             LogType::Error => f.write_all(b" ERR::").unwrap(),
+            LogType::Clean => {},
         }
-        f.write_all(Utc::now().to_rfc3339().as_bytes()).unwrap();
-        f.write_all(b":: ").unwrap();
+        match t {
+            LogType::Clean => {},
+            _ => {
+                f.write_all(Utc::now().to_rfc3339().as_bytes()).unwrap();
+                f.write_all(b":: ").unwrap();
+            },
+        }
         f.write_all(msg.as_bytes()).unwrap();
         f.write_all(b"\n").unwrap();
+        f.sync_all();
     }
 }
