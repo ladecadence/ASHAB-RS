@@ -62,7 +62,7 @@ pub struct Config {
 
     pub path_main_dir: String,
     pub path_images_dir: String,
-    pub path_log: String,
+    pub path_log_prefix: String,
 
     pub ssdv_size: String,
     pub ssdv_name: String,
@@ -107,7 +107,7 @@ impl Config {
 
             path_main_dir: "".to_string(),
             path_images_dir: "".to_string(),
-            path_log: "".to_string(),
+            path_log_prefix: "".to_string(),
 
             ssdv_size: "".to_string(),
             ssdv_name: "".to_string(),
@@ -457,7 +457,7 @@ impl Config {
                 ))
             }
         };
-        self.path_log = match section_path.get("log") {
+        self.path_log_prefix = match section_path.get("log_prefix") {
             Some(p) => p.to_string(),
             None => {
                 return Err(ConfigError::new(

@@ -111,7 +111,7 @@ impl Mission {
 
     pub fn init(&mut self, conf: &Config) {
         // Log
-        self.log.init(&(conf.path_main_dir.clone() + &conf.path_log));
+        self.log.init(&(conf.path_main_dir.clone() + &conf.path_log_prefix));
         self.log.log(LogType::Info, "NSX starting.");
 
         // GPS

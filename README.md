@@ -104,7 +104,7 @@ It's format is the typical INI file, divided in several sections for each missio
 * [paths]: General paths for mission logs and images
   * main_dir: main path where we store logs, images, etc.
   * images_dir: image storage relative path (to main_dir)
-  * log: log file name.
+  * log_prefix: prefix of the log file name, will be completed with datetime and ".log" extension.
 * [ssdv]: SSDV image configuration.
   * size: SSDV image resolution. WIDTHxHEIGH, like 640x480.
   * name: temporary filename for the SSDV image conversion.
@@ -153,7 +153,7 @@ i2c_addr = 0x77
 [paths]
 main_dir = /home/pi/MISSION/
 images_dir = images/
-log = log.txt
+log_prefix = missionlog
 
 [ssdv]
 size = 320x240
