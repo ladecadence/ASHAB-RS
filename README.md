@@ -141,6 +141,8 @@ sudo hwclock -s
 date
 ```
 
+Now each time the raspberry starts, you should have a correct date and time.
+
 ## Config file
 
 The configuration file contains all the parameters needed to configure the mission and the hardware used.
