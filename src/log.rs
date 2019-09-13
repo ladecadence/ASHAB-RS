@@ -60,6 +60,6 @@ impl Log {
         }
         f.write_all(msg.as_bytes()).unwrap();
         f.write_all(b"\n").unwrap();
-        f.sync_all();
+        f.sync_all().unwrap();
     }
 }
