@@ -31,7 +31,7 @@ See: http://wiki.ashab.space/doku.php?id=nearspacetwo (Spanish)
 You'll need a RaspberryPi Zero running Raspbian with the following software:
 
 * Imagemagick: $ sudo apt install imagemagick
-* Rust: (For development and compilation) $ curl https://sh.rustup.rs -sSf | sh
+* Rust: (For development and compilation on the raspberry) $ curl https://sh.rustup.rs -sSf | sh
 * ssdv: https://github.com/fsphil/ssdv -> make && sudo make install
 
 Also in raspi-config, you need to enable the i2c, spi, 1-wire and serial interfaces (serial interface WITHOUT console output).
@@ -45,6 +45,20 @@ $ cargo build
 
 ```
 
+You can also build the binary on your host computer, in linux install the cross-compiler for raspberry pi:
+
+```
+$ sudo apt install install gcc-arm-linux-gnueabihf 
+
+```
+
+And build using cargo cross compiling abilities
+
+```
+$ cargo build --target=arm-unknown-linux-gnueabihf
+
+```
+
 Then put the configuration file (nsx.cfg) in your /home/pi folder 
 (or change the path in mission.rs) and create a folder for the data (defined in nsx.cfg)
 and inside it a pictures/ folder
@@ -55,15 +69,77 @@ and inside it a pictures/ folder
   * pictures/
 
 Then you'll need to run the binary after the raspberry finishes booting.
-For this you can use the included ashabpi.service systemd file, copy it to /lib/systemd/system/m chmod 644 it, and run
+For this you can use the included ashabpi.service systemd file, modify it to your binary path, copy it to /lib/systemd/system/ chmod 644 it, and run
 
 ```
-sudo systemctl daemon-reload
-sudo systemctl enable ashabpi.service
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable ashabpi.service
 ```
 
+## RTC
 
+If using the RTC you need to configure the raspberry for it. First check the RTC is available using i2cdetect (from i2c-tools package):
 
+```
+$ sudo i2cdetect -y 1
+
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f                                                                     
+00:          -- -- -- -- -- -- -- -- -- -- -- -- --                                                                     
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                                                                     
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                                                                     
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                                                                     
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                                                                     
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                                                                     
+60: -- -- -- -- -- -- -- -- 68 -- -- -- -- -- -- --                                                                     
+70: -- -- -- -- -- -- -- 77                           
+
+```
+
+You should see a 68 address present. Then install the rtc module and enable the rtc:
+```
+$ sudo modprobe rtc-ds1307
+$ sudo su
+# echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
+# exit
+```
+
+Then test that the RTC is alive:
+
+```
+$ sudo hwclock -r
+2000-01-01 00:15:33.980780+00:00
+```
+Now set the system date using the date command or connecting the raspberry to the internet, and then set the RTC date:
+
+```
+$ sudo hwclock -w
+$ sudo hwclock -r
+2019-09-13 14:35:00.538018+02:00
+```
+
+Now to make this changes permanent, add the RTC module to the /etc/modules file
+
+```
+$ sudo su
+# echo rtc-ds1307 >> /etc/modules
+# exit
+```
+
+And edit /etc/rc.local to enable and update the clock on startup:
+
+```
+$ sudo nano /etc/rc.local
+
+```
+
+and add this lines just **before** exit 0:
+
+```
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
+sudo hwclock -s
+
+date
+```
 
 ## Config file
 
