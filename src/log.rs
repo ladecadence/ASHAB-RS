@@ -26,7 +26,7 @@ impl Log {
     }
 
     pub fn init(&mut self, f: &str) {
-        self.filename = f.to_string();
+        self.filename = f.to_string() + &Utc::now().to_rfc3339() + ".log";
         // create new file or erase if it exists
         let _f = OpenOptions::new()
             .create(true)
