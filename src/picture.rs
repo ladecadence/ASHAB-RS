@@ -117,7 +117,11 @@ impl Picture {
         // if we manage to capture a picture,
         // increment filename number
         if exit_code == 0 {
-            self.number = self.number + 1;
+            if self.number == 255 {
+                self.number = 0; 
+            } else {
+                self.number = self.number + 1;
+            }
             self.captured = true;
             return Ok(());
         }
