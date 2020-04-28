@@ -28,8 +28,8 @@ pub struct Ms5607 {
 
 #[allow(dead_code)]
 impl Ms5607 {
-    pub fn new(b: u8, a: u16) -> Ms5607 {
-        Ms5607 {
+    pub fn new(b: u8, a: u16) -> Self {
+        Self {
             bus: match LinuxI2CDevice::new(format!("/dev/i2c-{}", b), a) {
                 Ok(b) => b,
                 Err(e) => {

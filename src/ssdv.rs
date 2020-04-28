@@ -22,8 +22,8 @@ pub struct SSDVError {
 }
 
 impl SSDVError {
-    pub fn new(e: SSDVErrorType) -> SSDVError {
-        SSDVError { error_type: e }
+    pub fn new(e: SSDVErrorType) -> Self {
+        Self { error_type: e }
     }
 }
 
@@ -37,8 +37,8 @@ pub struct SSDV {
 }
 
 impl SSDV {
-    pub fn new(img: String, p: String, b: String, i: String, cnt: u8) -> SSDV {
-        SSDV {
+    pub fn new(img: String, p: String, b: String, i: String, cnt: u8) -> Self {
+        Self {
             image_file: img.clone(),
             id: i,
             count: cnt,

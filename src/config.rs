@@ -16,8 +16,8 @@ pub struct ConfigError {
 }
 
 impl ConfigError {
-    pub fn new(e: ConfigErrorType, s: &'static str) -> ConfigError {
-        ConfigError {
+    pub fn new(e: ConfigErrorType, s: &'static str) -> Self {
+        Self {
             error_type: e,
             info: s,
         }
@@ -69,8 +69,8 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(file: &str) -> Config {
-        Config {
+    pub fn new(file: &str) -> Self {
+        Self {
             initialized: false,
             file: file.to_string(),
 

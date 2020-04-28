@@ -11,8 +11,8 @@ pub struct DS18B20 {
 }
 
 impl DS18B20 {
-    pub fn new(dev: &str) -> DS18B20 {
-        DS18B20 {
+    pub fn new(dev: &str) -> Self {
+        Self {
             device: String::from("/sys/bus/w1/devices/")
                 + String::from(dev).as_str()
                 + String::from("/w1_slave").as_str(),

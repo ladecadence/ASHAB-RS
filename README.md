@@ -184,7 +184,7 @@ It's format is the typical INI file, divided in several sections for each missio
   * images_dir: image storage relative path (to main_dir)
   * log_prefix: prefix of the log file name, will be completed with datetime and ".log" extension.
 * [ssdv]: SSDV image configuration.
-  * size: SSDV image resolution. WIDTHxHEIGH, like 640x480.
+  * size: SSDV image resolution. WIDTHxHEIGHT, like 640x480.
   * name: temporary filename for the SSDV image conversion.
 
 An example of a config file:

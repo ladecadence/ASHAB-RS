@@ -87,8 +87,8 @@ struct Mission {
 }
 
 impl Mission {
-    pub fn new(conf: &Config) -> Mission {
-        Mission {
+    pub fn new(conf: &Config) -> Self {
+        Self {
             log: Log::new(),
             gps: GPS::new(&conf.gps_serial_port, conf.gps_speed),
             led: LED::new(conf.led_pin),

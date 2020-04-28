@@ -36,8 +36,8 @@ pub struct GpsError {
 }
 
 impl GpsError {
-    pub fn new(t: GpsErrorType) -> GpsError {
-        GpsError { error_type: t }
+    pub fn new(t: GpsErrorType) -> Self {
+        Self { error_type: t }
     }
 }
 
@@ -61,8 +61,8 @@ pub struct GPS {
 
 #[allow(dead_code)]
 impl GPS {
-    pub fn new(port_name: &str, port_speed: u32) -> GPS {
-        GPS {
+    pub fn new(port_name: &str, port_speed: u32) -> Self {
+        Self {
             time: String::from(""),
             latitude: 4332.94,
             ns: 'N',
