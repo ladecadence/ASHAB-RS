@@ -1,3 +1,21 @@
+// (C) 2018 David Pello Gonzalez for ASHAB
+//
+// This program is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.
+// If not, see <http://www.gnu.org/licenses/>.
+
+// Creates and updates a log file of the mission status or data
+
 extern crate chrono;
 
 use chrono::prelude::*;
@@ -26,7 +44,8 @@ impl Log {
     }
 
     pub fn init(&mut self, f: &str) {
-        self.filename = f.to_string();
+        // add timestamp to filename
+        self.filename = f.to_string() + &Utc::now().to_rfc3339() + ".log";
         // create new file or erase if it exists
         let _f = OpenOptions::new()
             .create(true)
@@ -44,6 +63,7 @@ impl Log {
             .open(self.filename.as_str())
             .unwrap();
         // log msg
+        // headers
         match t {
             LogType::Data => f.write_all(b"DATA::").unwrap(),
             LogType::Info => f.write_all(b"INFO::").unwrap(),
@@ -51,6 +71,7 @@ impl Log {
             LogType::Error => f.write_all(b" ERR::").unwrap(),
             LogType::Clean => {},
         }
+        // and timestamp
         match t {
             LogType::Clean => {},
             _ => {
@@ -58,8 +79,10 @@ impl Log {
                 f.write_all(b":: ").unwrap();
             },
         }
+        // write message
         f.write_all(msg.as_bytes()).unwrap();
         f.write_all(b"\n").unwrap();
+        // try to sync all data so it isn't lost in a power down/reset event
         f.sync_all().unwrap();
     }
 }

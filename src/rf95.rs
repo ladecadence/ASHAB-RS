@@ -1,4 +1,4 @@
-// (C) 2016 David Pello Gonzalez for ASHAB
+// (C) 2018 David Pello Gonzalez for ASHAB
 // Based on code from the RadioHead Library:
 // http://www.airspayce.com/mikem/arduino/RadioHead/
 //
@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.
 // If not, see <http://www.gnu.org/licenses/>.
+
+// Library to receive and send data using an RF95 LoRa Module.
 
 #![allow (dead_code)]
 extern crate spidev;

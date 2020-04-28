@@ -1,3 +1,22 @@
+// (C) 2018 David Pello Gonzalez for ASHAB
+//
+// This program is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.
+// If not, see <http://www.gnu.org/licenses/>.
+
+// Object that stores the data in the telemetry packets and generates
+// formatted strings to store/send them.
+
 extern crate chrono;
 use chrono::prelude::*;
 
@@ -111,8 +130,8 @@ impl Telemetry {
         // calculate ascension rate
         let delta_time = self.date_time.signed_duration_since(old_date_time);
         if delta_time.num_milliseconds() != 0 {
-            self.arate =
-                (self.alt - old_alt) as f32 / (delta_time.num_milliseconds() as f32 / 1000.0);
+            self.arate = (self.alt - old_alt) as f32 /
+                (delta_time.num_milliseconds() as f32 / 1000.0);
         } else {
             self.arate = 0.0;
         }
@@ -176,13 +195,47 @@ impl Telemetry {
         aprs.push_str("\n");
 
         // fill with nulls up to 255 chars
-        if aprs.len() < 255 {
-            while aprs.len() < 255 {
-                aprs.push_str("\0");
-            }
-        }
+        //if aprs.len() < 255 {
+        //    while aprs.len() < 255 {
+        //        aprs.push_str("\0");
+        //    }
+        //}
 
         // return string
         aprs
+    }
+
+    pub fn csv_string(&mut self) -> String {
+        let mut csv = String::from("");
+        csv.push_str(&format!("{}", self.date));
+        csv.push_str(",");
+        csv.push_str(&format!("{}", self.time));
+        csv.push_str(",");
+        csv.push_str(&format!("{}", self.dec_lat()));
+        csv.push_str(&format!("{}", self.ns));
+        csv.push_str(",");
+        csv.push_str(&format!("{}", self.dec_lon()));
+        csv.push_str(&format!("{}", self.ew));
+        csv.push_str(",");
+        csv.push_str(&format!("{:.1}", self.alt));
+        csv.push_str(",");
+        csv.push_str(&format!("{:.2}", self.vbat));
+        csv.push_str(",");
+        csv.push_str(&format!("{:.1}", self.tin));
+        csv.push_str(",");
+        csv.push_str(&format!("{:.1}", self.tout));
+        csv.push_str(",");
+        csv.push_str(&format!("{:.1}", self.baro));
+        csv.push_str(",");
+        csv.push_str(&format!("{:.1}", self.hdg));
+        csv.push_str(",");
+        csv.push_str(&format!("{:.1}", self.spd));
+        csv.push_str(",");
+        csv.push_str(&format!("{}", self.sats));
+        csv.push_str(",");
+        csv.push_str(&format!("{:.1}", self.arate));
+
+        // return string
+        csv
     }
 }

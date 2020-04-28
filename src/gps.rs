@@ -1,3 +1,23 @@
+// (C) 2018 David Pello Gonzalez for ASHAB
+//
+// This program is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.
+// If not, see <http://www.gnu.org/licenses/>.
+
+// Object to get position data from a compatible NMEA GPS device
+// over serial port
+
+
 #![allow(dead_code)]
 extern crate serial;
 
@@ -64,9 +84,9 @@ impl GPS {
     pub fn new(port_name: &str, port_speed: u32) -> Self {
         Self {
             time: String::from(""),
-            latitude: 4332.94,
+            latitude: 4332.944,
             ns: 'N',
-            longitude: 00539.78,
+            longitude: 00539.783,
             ew: 'W',
             altitude: 0.0,
             sats: 0,
@@ -86,6 +106,7 @@ impl GPS {
         }
     }
 
+    // configure serial port
     pub fn config(&mut self) -> Result<(), GpsError> {
         match self.port.as_ref() {
             Err(_e) => return Err(GpsError::new(GpsErrorType::Open)),
@@ -105,6 +126,7 @@ impl GPS {
         Ok(())
     }
 
+    // update position data from NMEA sentences
     pub fn update(&mut self) -> Result<(), GpsError> {
         let mut reader = BufReader::new(self.port.as_mut().unwrap());
 
@@ -156,14 +178,14 @@ impl GPS {
                 }
             }
             if self.sats < MIN_SATS {
+                // not enough sats, but perhaps we can parse time
+                self.time = String::from(gga_data[FIELD_TIME]);
                 return Err(GpsError::new(GpsErrorType::Sats));
             }
 
             // ok parse elements if possible, if not provide default values
-            //
-
             self.time = String::from(gga_data[FIELD_TIME]);
-
+            
             self.latitude = gga_data[FIELD_LAT].parse::<f32>().unwrap_or(0.0);
 
             self.ns = gga_data[FIELD_NS].chars().nth(0).unwrap_or('N');
@@ -188,6 +210,7 @@ impl GPS {
         Ok(())
     }
 
+    // convert NMEA coordinates to decimal
     pub fn decimal_latitude(&self) -> f32 {
         let degrees = (self.latitude / 100.0).trunc();
         let fraction = (self.latitude - (degrees * 100.0)) / 60.0;
@@ -202,15 +225,16 @@ impl GPS {
         degrees + fraction
     }
 
+    // get time from the GPS sentences
     pub fn get_time(&self) -> Result<(i32, i32, i32), GpsError> {
         if self.time.chars().count() >= 6 {
             let hour = self.time[0..2].parse::<i32>().unwrap_or(0);
             let minute = self.time[2..4].parse::<i32>().unwrap_or(0);
-            let second = self.time[4..].parse::<i32>().unwrap_or(0);
+            let second = self.time[4..].parse::<f32>().unwrap_or(0.0) as i32;
 
             return Ok((hour,minute,second));
         }
-
+        println!("GGA time: {}", self.time);
         Err(GpsError::new(GpsErrorType::Fix))
     }
 }

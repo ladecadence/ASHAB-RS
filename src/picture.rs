@@ -1,3 +1,22 @@
+// (C) 2018 David Pello Gonzalez for ASHAB
+//
+// This program is free software: you can redistribute it
+// and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation, either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.
+// If not, see <http://www.gnu.org/licenses/>.
+
+// Uses the raspberry pi camera to take pictures and add mission data
+// over them
+
 use std::process::Command;
 
 extern crate chrono;
@@ -98,7 +117,11 @@ impl Picture {
         // if we manage to capture a picture,
         // increment filename number
         if exit_code == 0 {
-            self.number = self.number + 1;
+            if self.number == 255 {
+                self.number = 0; 
+            } else {
+                self.number = self.number + 1;
+            }
             self.captured = true;
             return Ok(());
         }

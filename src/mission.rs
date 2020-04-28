@@ -14,6 +14,8 @@
 // along with this program.
 // If not, see <http://www.gnu.org/licenses/>.
 
+// Main mission code.
+
 extern crate chrono;
 extern crate image;
 extern crate imageproc;
@@ -72,6 +74,7 @@ const CONFIG_FILE: &'static str = "/home/pi/nsx.cfg";
 
 struct Mission {
     log: Log,
+    datalog: Log,
     gps: GPS,
     led: LED,
     mcp3002: Mcp3002,
@@ -90,6 +93,7 @@ impl Mission {
     pub fn new(conf: &Config) -> Self {
         Self {
             log: Log::new(),
+            datalog: Log:: new(),
             gps: GPS::new(&conf.gps_serial_port, conf.gps_speed),
             led: LED::new(conf.led_pin),
             mcp3002: Mcp3002::new(conf.adc_cs, 0),
@@ -113,6 +117,9 @@ impl Mission {
         // Log
         self.log.init(&(conf.path_main_dir.clone() + &conf.path_log_prefix));
         self.log.log(LogType::Info, "NSX starting.");
+
+        // datalog
+        self.datalog.init(&(conf.path_main_dir.clone() + "datalog_"));
 
         // GPS
         match self.gps.config() {
@@ -210,11 +217,12 @@ impl Mission {
                 self.log.log(
                     LogType::Data,
                     &format!(
-                        "{}{}, {}{}, Sats: {}",
+                        "{}{}, {}{}, Alt: {}m, Sats: {}",
                         self.gps.decimal_latitude(),
                         self.gps.ns,
                         self.gps.decimal_longitude(),
                         self.gps.ew,
+                        self.gps.altitude,
                         self.gps.sats
                     ),
                 );
@@ -484,6 +492,9 @@ fn main() {
             // Send telemetry
             mission.update_telemetry(&config);
             mission.send_telemetry();
+            
+            // write datalog
+            mission.datalog.log(LogType::Clean, &mission.telem.csv_string());
 
             // Wait
             thread::sleep(Duration::from_millis(config.packet_delay as u64 * 1000));
