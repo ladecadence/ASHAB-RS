@@ -20,6 +20,7 @@ extern crate chrono;
 
 use chrono::prelude::*;
 use std::fs::OpenOptions;
+use std::io;
 use std::io::prelude::*;
 
 #[allow(dead_code)]
@@ -55,34 +56,34 @@ impl Log {
             .unwrap();
     }
 
-    pub fn log(&mut self, t: LogType, msg: &str) {
+    pub fn log(&mut self, t: LogType, msg: &str) -> Result<(), io::Error>{
         // open file for append
         let mut f = OpenOptions::new()
             .append(true)
             .create(true)
-            .open(self.filename.as_str())
-            .unwrap();
+            .open(self.filename.as_str())?;
         // log msg
         // headers
         match t {
-            LogType::Data => f.write_all(b"DATA::").unwrap(),
-            LogType::Info => f.write_all(b"INFO::").unwrap(),
-            LogType::Warn => f.write_all(b"WARN::").unwrap(),
-            LogType::Error => f.write_all(b" ERR::").unwrap(),
+            LogType::Data => f.write_all(b"DATA::")?,
+            LogType::Info => f.write_all(b"INFO::")?,
+            LogType::Warn => f.write_all(b"WARN::")?,
+            LogType::Error => f.write_all(b" ERR::")?,
             LogType::Clean => {},
         }
         // and timestamp
         match t {
             LogType::Clean => {},
             _ => {
-                f.write_all(Utc::now().to_rfc3339().as_bytes()).unwrap();
-                f.write_all(b":: ").unwrap();
+                f.write_all(Utc::now().to_rfc3339().as_bytes())?;
+                f.write_all(b":: ")?;
             },
         }
         // write message
-        f.write_all(msg.as_bytes()).unwrap();
-        f.write_all(b"\n").unwrap();
+        f.write_all(msg.as_bytes())?;
+        f.write_all(b"\n")?;
         // try to sync all data so it isn't lost in a power down/reset event
-        f.sync_all().unwrap();
+        f.sync_all()?;
+        Ok(())
     }
 }
