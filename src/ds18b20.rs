@@ -49,9 +49,9 @@ impl DS18B20 {
 
         let mut buffer = String::new();
         // read second line into buffer
-        reader.read_line(&mut buffer).unwrap();
+        reader.read_line(&mut buffer)?;
         buffer.clear();
-        reader.read_line(&mut buffer).unwrap();
+        reader.read_line(&mut buffer)?;
 
         // ok, we have second line in buffer, parse it
         let data: Vec<&str> = buffer.split(" ").collect();
