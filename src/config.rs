@@ -177,6 +177,7 @@ impl Config {
                 ))
             }
         };
+
         self.msg = match section_mission.get("msg") {
             Some(p) => p.to_string(),
             None => {
@@ -186,6 +187,7 @@ impl Config {
                 ))
             }
         };
+        
         self.separator = match section_mission.get("separator") {
             Some(p) => p.to_string(),
             None => {
@@ -195,6 +197,7 @@ impl Config {
                 ))
             }
         };
+        
         self.packet_repeat = match section_mission.get("packet_repeat") {
             Some(p) => p.parse::<u32>().unwrap_or(0),
             None => {
@@ -204,6 +207,7 @@ impl Config {
                 ))
             }
         };
+        
         self.packet_delay = match section_mission.get("packet_delay") {
             Some(p) => p.parse::<u32>().unwrap_or(0),
             None => {
@@ -234,6 +238,7 @@ impl Config {
                 ))
             }
         };
+        
         self.led_pin = match section_gpio.get("led_pin") {
             Some(p) => p.parse::<u8>().unwrap_or(0),
             None => {
@@ -243,6 +248,7 @@ impl Config {
                 ))
             }
         };
+        
         self.pwr_pin = match section_gpio.get("pwr_pin") {
             Some(p) => p.parse::<u8>().unwrap_or(0),
             None => {
@@ -273,6 +279,7 @@ impl Config {
                 ))
             }
         };
+        
         self.gps_speed = match section_gps.get("speed") {
             Some(p) => p.parse::<u32>().unwrap_or(0),
             None => {
@@ -303,6 +310,7 @@ impl Config {
                 ))
             }
         };
+        
         self.lora_int_pin = match section_lora.get("int_pin") {
             Some(p) => p.parse::<u8>().unwrap_or(0),
             None => {
@@ -312,6 +320,7 @@ impl Config {
                 ))
             }
         };
+        
         self.lora_freq = match section_lora.get("freq") {
             Some(p) => p.parse::<f32>().unwrap_or(0.0),
             None => {
@@ -321,6 +330,7 @@ impl Config {
                 ))
             }
         };
+        
         self.lora_low_pwr = match section_lora.get("low_pwr") {
             Some(p) => p.parse::<u8>().unwrap_or(0),
             None => {
@@ -330,6 +340,7 @@ impl Config {
                 ))
             }
         };
+        
         self.lora_high_pwr = match section_lora.get("high_pwr") {
             Some(p) => p.parse::<u8>().unwrap_or(0),
             None => {
@@ -360,6 +371,7 @@ impl Config {
                 ))
             }
         };
+        
         self.adc_vbatt = match section_adc.get("vbatt") {
             Some(p) => p.parse::<u8>().unwrap_or(0),
             None => {
@@ -369,6 +381,7 @@ impl Config {
                 ))
             }
         };
+        
         self.adc_v_divider = match section_adc.get("v_divider") {
             Some(p) => p.parse::<f32>().unwrap_or(0.0),
             None => {
@@ -378,6 +391,7 @@ impl Config {
                 ))
             }
         };
+        
         self.adc_v_mult = match section_adc.get("v_mult") {
             Some(p) => p.parse::<f32>().unwrap_or(0.0),
             None => {
@@ -408,6 +422,7 @@ impl Config {
                 ))
             }
         };
+        
         self.temp_external_addr = match section_temp.get("external_addr") {
             Some(p) => p.to_string(),
             None => {
@@ -438,6 +453,7 @@ impl Config {
                 ))
             }
         };
+        
         // convert from hex
         self.baro_addr = match section_baro.get("i2c_addr") {
             Some(s) => u16::from_str_radix(s.trim_start_matches("0x"), 16).unwrap(),
@@ -469,6 +485,7 @@ impl Config {
                 ))
             }
         };
+        
         self.path_images_dir = match section_path.get("images_dir") {
             Some(p) => p.to_string(),
             None => {
@@ -478,6 +495,7 @@ impl Config {
                 ))
             }
         };
+        
         self.path_log_prefix = match section_path.get("log_prefix") {
             Some(p) => p.to_string(),
             None => {
