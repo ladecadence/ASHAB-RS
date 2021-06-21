@@ -40,6 +40,7 @@ pub struct Telemetry {
     time: String,
     sep: String,
     date_time: DateTime<Utc>,
+    hpwr: u8,
 }
 
 impl Telemetry {
@@ -74,6 +75,7 @@ impl Telemetry {
                 Utc::now().minute(),
                 Utc::now().second()
             ),
+            hpwr: 0,
         }
     }
 
@@ -91,6 +93,7 @@ impl Telemetry {
         baro: f32,
         tin: f32,
         tout: f32,
+        hpwr: u8,
     ) {
         // save old altitude for ascension rate
         let old_alt = self.alt;
@@ -108,6 +111,7 @@ impl Telemetry {
         self.baro = baro;
         self.tin = tin;
         self.tout = tout;
+        self.hpwr = hpwr;
 
         // save old datetime
         let old_date_time = self.date_time;
@@ -192,6 +196,11 @@ impl Telemetry {
         aprs.push_str(&format!("AR={:.1}", self.arate));
         aprs.push_str(&self.sep);
         aprs.push_str(&self.msg.replace("\n", " - "));
+        aprs.push_str(&format!(" - {}", match self.hpwr {
+            0 => "L",
+            1 => "H",
+            _ => "?",
+        }));
         aprs.push_str("\n");
 
         // fill with nulls up to 255 chars

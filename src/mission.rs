@@ -323,6 +323,7 @@ impl Mission {
             self.baro.get_pres().unwrap(),
             t_in,
             t_out,
+            self.pwr_sel,
         );
     }
 
