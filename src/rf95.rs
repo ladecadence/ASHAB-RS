@@ -249,8 +249,8 @@ pub struct RF95 {
 }
 
 impl RF95 {
-    pub fn new(ch: u8, int: u8, use_i: bool) -> RF95 {
-        RF95 {
+    pub fn new(ch: u8, int: u8, use_i: bool) -> Self {
+        Self {
             mode: RADIO_MODE_INITIALISING,
             buf: [0; 256],
             buflen: 0,

@@ -27,8 +27,8 @@ pub struct LED {
 }
 
 impl LED {
-    pub fn new(p: u8) -> LED {
-        LED {
+    pub fn new(p: u8) -> Self {
+        Self {
             pin: Pin::new(p as u64),
         }
     }

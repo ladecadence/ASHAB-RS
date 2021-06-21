@@ -57,8 +57,8 @@ pub struct PictureError {
 }
 
 impl PictureError {
-    pub fn new(t: PictureErrorType) -> PictureError {
-        PictureError { error_type: t }
+    pub fn new(t: PictureErrorType) -> Self {
+        Self { error_type: t }
     }
 }
 
@@ -73,8 +73,8 @@ pub struct Picture {
 
 #[allow(dead_code)]
 impl Picture {
-    pub fn new(num: u8, name: &str, p: &str) -> Picture {
-        Picture {
+    pub fn new(num: u8, name: &str, p: &str) -> Self {
+        Self {
             number: num,
             filename: String::from(p) + name.clone() + &num.to_string() + ".jpg",
             basename: String::from(name),

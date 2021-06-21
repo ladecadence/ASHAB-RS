@@ -158,15 +158,15 @@ It's format is the typical INI file, divided in several sections for each missio
 * [gpio]: General GPIO used by the software (check StratoZero pins).
   * batt_enable_pin: GPIO (broadcom notation) used to enable and disable battery reading (consumes power). GPIO 24 on StratoZero board.
   * led_pin: GPIO used for status LED. GPIO 17 on StatoZero.
-  * pwr_pin: GPIO used to configure RF power (high and low). GPIO 26 on StratoZero).
+  * pwr_pin: GPIO used to configure RF power, high or low. GPIO 26 on StratoZero board.
 * [gps]: GPS port and baudrate.
   * serial_port: serial port device (/dev/ttyAMA0, etc)
   * speed: GPS baudrate (like 9600).
 * [lora]: LoRa radio SPI bus and configuration.
   * cs: Chip Select channel for SPI bus. LoRa Radio on StatoZero board uses CS 0.
-  * int_pin: LoRa Radio interrupt pin. Used to check received packets or radio activity. StartoZero uses GPIO 25.
-  * freq: LoRa Radio output frequency.
-  * low_pwr: Low RF power, useful when testing on ground.
+  * int_pin: LoRa Radio interrupt pin. Used to check received packets or radio activity. StratoZero uses GPIO 25.
+  * freq: LoRa Radio output frequency (in MHz).
+  * low_pwr: Low RF power, useful when testing on ground. See high_pwr.
   * high_pwr: High RF power, used when flying. RF95 LoRa radios used in the StatoZero boards minimun and maximum power leves are 5-20.
 * [adc]: Analog to digital converter bus and battery calibration.
   * cs: Chip Select channel for SPI bus. MCP3002 ADC on StratoZero board uses CS 1.
@@ -175,7 +175,7 @@ It's format is the typical INI file, divided in several sections for each missio
   * v_mult: multiplier to calibrate battery readings.
 * [temp]: Temperature sensors addresses.
   * internal_addr &
-  * external_addr: 1-Wire bus addresses of the DS18B20 temperature sensors. You can find the in /sys/bus/w1/devices/
+  * external_addr: 1-Wire bus addresses of the DS18B20 temperature sensors. You can find them in /sys/bus/w1/devices/
 * [baro]: Barometer i2c configuration.
   * i2c_bus: Raspberry Pi has 2 i2c buses. External i2c bus (the one present in the GPIO pins) is bus 1.
   * i2c_addr: i2c address of the baraometer. StratoZero uses a MS5607 sensor with address 0x77
@@ -184,7 +184,7 @@ It's format is the typical INI file, divided in several sections for each missio
   * images_dir: image storage relative path (to main_dir)
   * log_prefix: prefix of the log file name, will be completed with datetime and ".log" extension.
 * [ssdv]: SSDV image configuration.
-  * size: SSDV image resolution. WIDTHxHEIGH, like 640x480.
+  * size: SSDV image resolution. WIDTHxHEIGHT pixels, like 640x480.
   * name: temporary filename for the SSDV image conversion.
 
 An example of a config file:

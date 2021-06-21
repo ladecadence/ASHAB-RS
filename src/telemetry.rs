@@ -44,8 +44,8 @@ pub struct Telemetry {
 }
 
 impl Telemetry {
-    pub fn new(i: String, m: String, s: String) -> Telemetry {
-        Telemetry {
+    pub fn new(i: String, m: String, s: String) -> Self {
+        Self {
             id: i,
             msg: m,
             sep: s,

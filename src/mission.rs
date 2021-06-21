@@ -29,6 +29,7 @@ use std::thread;
 use std::process::Command;
 use std::time::{Duration, Instant};
 use sysfs_gpio::{Direction, Pin};
+use std::io;
 
 // own uses
 mod gps;
@@ -90,8 +91,8 @@ struct Mission {
 }
 
 impl Mission {
-    pub fn new(conf: &Config) -> Mission {
-        Mission {
+    pub fn new(conf: &Config) -> Self {
+        Self {
             log: Log::new(),
             datalog: Log:: new(),
             gps: GPS::new(&conf.gps_serial_port, conf.gps_speed),
@@ -113,10 +114,10 @@ impl Mission {
         }
     }
 
-    pub fn init(&mut self, conf: &Config) {
+    pub fn init(&mut self, conf: &Config) -> Result<(), io::Error> {
         // Log
         self.log.init(&(conf.path_main_dir.clone() + &conf.path_log_prefix));
-        self.log.log(LogType::Info, "NSX starting.");
+        self.log.log(LogType::Info, "NSX starting.")?;
 
         // datalog
         self.datalog.init(&(conf.path_main_dir.clone() + "datalog_"));
@@ -209,9 +210,11 @@ impl Mission {
         }
 
         self.log.log(LogType::Info, &format!("Power selection: {}", self.pwr_sel));
+    
+        Ok(())
     }
 
-    pub fn update_telemetry(&mut self, conf: &Config) {
+    pub fn update_telemetry(&mut self, conf: &Config) -> Result<(), io::Error> {
         // Update sensor data
         // GPS
         match self.gps.update() {
@@ -229,24 +232,22 @@ impl Mission {
                         self.gps.date,
                         self.gps.time
                     ),
-                );
+                )?;
             }
             Err(e) => {
                 match e.error_type {
                     GpsErrorType::Sats => {
-                        self.log.log(LogType::Warn, "GPS: No hay suficientes sats")
+                        self.log.log(LogType::Warn, "GPS: No hay suficientes sats")?
                     }
                     GpsErrorType::GGA => self.log.log(
                         LogType::Warn,
                         &format!("GPS: Error en la sentencia GGA: {}", self.gps.line_gga),
-                    ),
-                    GpsErrorType::RMC => self
-                        .log
-                        .log(LogType::Warn, "GPS: Error en la sentencia RMC"),
-                    GpsErrorType::Fix => self.log.log(LogType::Warn, "GPS: Error con el Fix"),
-                    GpsErrorType::Parse => self
-                        .log
-                        .log(LogType::Warn, "GPS: Error parseando los datos"),
+                    )?,
+                    GpsErrorType::RMC => self.log
+                        .log(LogType::Warn, "GPS: Error en la sentencia RMC")?,
+                    GpsErrorType::Fix => self.log.log(LogType::Warn, "GPS: Error con el Fix")?,
+                    GpsErrorType::Parse => self.log
+                        .log(LogType::Warn, "GPS: Error parseando los datos")?,
                     _ => {}
                 };
                 self.led.err();
@@ -258,29 +259,29 @@ impl Mission {
         self.log.log(
             LogType::Data,
             &format!("BARO: {}", self.baro.get_pres().unwrap()),
-        );
+        )?;
 
         // Temperatures
         let t_in = match self.temp_internal.read() {
             Ok(t) => {
-                self.log.log(LogType::Data, &format!("TIN: {}", t));
+                self.log.log(LogType::Data, &format!("TIN: {}", t))?;
                 t
             }
             Err(e) => {
                 self.log
-                    .log(LogType::Warn, &format!("Error reading TIN: {}", e));
+                    .log(LogType::Warn, &format!("Error reading TIN: {}", e))?;
                 9999.0
             }
         };
 
         let t_out = match self.temp_external.read() {
             Ok(t) => {
-                self.log.log(LogType::Data, &format!("TOUT: {}", t));
+                self.log.log(LogType::Data, &format!("TOUT: {}", t))?;
                 t
             }
             Err(e) => {
                 self.log
-                    .log(LogType::Warn, &format!("Error reading TOUT: {}", e));
+                    .log(LogType::Warn, &format!("Error reading TOUT: {}", e))?;
                 9999.0
             }
         };
@@ -293,12 +294,12 @@ impl Mission {
 
         let adc_batt = match self.mcp3002.read(conf.adc_vbatt) {
             Ok(n) => {
-                self.log.log(LogType::Data, &format!("ADC0: {}", n));
+                self.log.log(LogType::Data, &format!("ADC0: {}", n))?;
                 n
             }
             Err(e) => {
                 self.log
-                    .log(LogType::Warn, &format!("Error reading ADC: {}", e));
+                    .log(LogType::Warn, &format!("Error reading ADC: {}", e))?;
                 0
             }
         };
@@ -307,7 +308,7 @@ impl Mission {
 
         let vbatt: f32 =
             conf.adc_v_mult * conf.adc_v_divider * (adc_batt as f32 * 3.3 / 1023.0);
-        self.log.log(LogType::Data, &format!("VBATT: {}", vbatt));
+        self.log.log(LogType::Data, &format!("VBATT: {}", vbatt))?;
 
         // Create telemetry packet
         self.telem.update(
@@ -325,27 +326,29 @@ impl Mission {
             t_out,
             self.pwr_sel,
         );
+        Ok(())
     }
 
-    pub fn send_telemetry(&mut self) {
+    pub fn send_telemetry(&mut self) -> Result<(), io::Error>{
         // Send telemetry
-        self.log.log(LogType::Info, "Sending telemetry packet...");
+        self.log.log(LogType::Info, "Sending telemetry packet...")?;
         self.lora.send(self.telem.aprs_string().as_bytes());
         self.lora.wait_packet_sent();
-        self.log.log(LogType::Info, "Telemetry packet sent.");
+        self.log.log(LogType::Info, "Telemetry packet sent.")?;
         self.led.blink();
+        Ok(())
     }
 
-    pub fn send_ssdv(&mut self, conf: &Config) {
+    pub fn send_ssdv(&mut self, conf: &Config) -> Result<(), io::Error>{
         // Take picture
         match self.pic.capture() {
             Ok(()) => self.log.log(
                 LogType::Info,
                 &format!("Picture shot: {}", self.pic.filename),
-            ),
+            )?,
             Err(e) => self
                 .log
-                .log(LogType::Error, &format!("Error taking picture {:?}", e)),
+                .log(LogType::Error, &format!("Error taking picture {:?}", e))?,
         };
 
         // Take SSDV picture
@@ -356,11 +359,11 @@ impl Mission {
             Ok(()) => self.log.log(
                 LogType::Info,
                 &format!("SSDV picture shot: {}", conf.ssdv_name.clone()),
-            ),
+            )?,
             Err(e) => self.log.log(
                 LogType::Error,
                 &format!("Error taking SSDV picture {:?}", e),
-            ),
+            )?,
         };
 
         // Encode SSDV picture
@@ -378,11 +381,11 @@ impl Mission {
                 self.gps.altitude,
             ),
         ) {
-            Ok(()) => self.log.log(LogType::Info, "SSDV Image info added."),
+            Ok(()) => self.log.log(LogType::Info, "SSDV Image info added.")?,
             Err(e) => self.log.log(
                 LogType::Error,
                 &format!("SSDV Image info adding error {:?}", e),
-            ),
+            )?,
         };
 
         let mut ssdv: SSDV = SSDV::new(
@@ -400,14 +403,14 @@ impl Mission {
                     "SSDV Image {}, Packets encoded: {}",
                     ssdv.binaryname, ssdv.packets
                 ),
-            ),
+            )?,
             Err(e) => self
                 .log
-                .log(LogType::Error, &format!("Error encoding SSDV: {:?}", e)),
+                .log(LogType::Error, &format!("Error encoding SSDV: {:?}", e))?,
         };
 
         // Send SSDV
-        self.log.log(LogType::Info, "Sending SSDV image...");
+        self.log.log(LogType::Info, "Sending SSDV image...")?;
         // get time
         let mut last_time = Instant::now();
         for i in 0..ssdv.packets {
@@ -417,8 +420,8 @@ impl Mission {
             // check if we need to send telemetry between image packets
             let now = Instant::now();
             if now.duration_since(last_time).as_secs() > conf.packet_delay as u64 {
-                self.update_telemetry(&conf);
-                self.send_telemetry();
+                self.update_telemetry(&conf)?;
+                self.send_telemetry()?;
                 last_time = Instant::now();
             }
 
@@ -429,7 +432,9 @@ impl Mission {
         self.log.log(
             LogType::Info,
             &format!("SSDV Image {} packets sent.", ssdv.packets),
-        );
+        )?;
+
+        Ok(())
     }
 }
 
@@ -449,13 +454,13 @@ fn main() {
 
     // create mission and configure it
     let mut mission: Mission = Mission::new(&config);
-    mission.init(&config);
+    mission.init(&config).unwrap();
 
     // Ok, now get time from GPS and update system time
     match mission.gps.update() {
         Ok(()) => {},
         Err(e) => {
-            mission.log.log(LogType::Error, &format!("Error updating GPS: {:?}", e));
+            mission.log.log(LogType::Error, &format!("Error updating GPS: {:?}", e)).unwrap();
         }
     }
     match mission.gps.get_time() {
@@ -477,15 +482,15 @@ fn main() {
                             "System time set: {:02}:{:02}:{:02} - {:?}",
                             hour, min, sec, exit_code
                         )
-                    );
+                    ).unwrap();
                 },
                 Err(e) => {
-                    mission.log.log(LogType::Error, &format!("Error setting time: {:?}", e));
+                    mission.log.log(LogType::Error, &format!("Error setting time: {:?}", e)).unwrap();
                 },
             }
         },
         Err(e) => {
-            mission.log.log(LogType::Error, &format!("Error getting GPS time: {:?}", e));
+            mission.log.log(LogType::Error, &format!("Error getting GPS time: {:?}", e)).unwrap();
         },
     }
 
@@ -496,18 +501,18 @@ fn main() {
             // Check for commands
 
             // Send telemetry
-            mission.update_telemetry(&config);
-            mission.send_telemetry();
+            mission.update_telemetry(&config).unwrap();
+            mission.send_telemetry().unwrap();
             
             // write datalog
-            mission.datalog.log(LogType::Clean, &mission.telem.csv_string());
+            mission.datalog.log(LogType::Clean, &mission.telem.csv_string()).unwrap();
 
             // Wait
             thread::sleep(Duration::from_millis(config.packet_delay as u64 * 1000));
         }
 
         // send SSDV
-        mission.send_ssdv(&config);
+        mission.send_ssdv(&config).unwrap();
 
         // Wait
         thread::sleep(Duration::from_millis(config.packet_delay as u64 * 1000));
