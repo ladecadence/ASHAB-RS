@@ -207,6 +207,8 @@ impl Mission {
             1 => self.lora.set_tx_power(conf.lora_high_pwr),
             _ => {}
         }
+
+        self.log.log(LogType::Info, &format!("Power selection: {}", self.pwr_sel));
     }
 
     pub fn update_telemetry(&mut self, conf: &Config) {
@@ -217,13 +219,15 @@ impl Mission {
                 self.log.log(
                     LogType::Data,
                     &format!(
-                        "{}{}, {}{}, Alt: {}m, Sats: {}",
+                        "{}{}, {}{}, Alt: {}m, Sats: {}, Date: {}, Time: {}",
                         self.gps.decimal_latitude(),
                         self.gps.ns,
                         self.gps.decimal_longitude(),
                         self.gps.ew,
                         self.gps.altitude,
-                        self.gps.sats
+                        self.gps.sats,
+                        self.gps.date,
+                        self.gps.time
                     ),
                 );
             }
@@ -457,6 +461,7 @@ fn main() {
         Ok(time) => {
             let (hour, min, sec) = time;
             let status = Command::new("date")
+            	.arg("-u")
                 .arg("+%T")
                 .arg("-s")
                 .arg(&format!("{:02}:{:02}:{:02}", hour, min, sec))
