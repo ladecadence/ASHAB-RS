@@ -237,4 +237,18 @@ impl GPS {
         println!("GGA time: {}", self.time);
         Err(GpsError::new(GpsErrorType::Fix))
     }
+
+    // get date from the GPS sentences
+    pub fn get_date(&self) -> Result<(i32, i32, i32), GpsError> {
+        if self.date.chars().count() >= 6 {
+            let day = self.date[0..2].parse::<i32>().unwrap_or(0);
+            let month = self.date[2..4].parse::<i32>().unwrap_or(0);
+            // we are in year 2000+
+            let year = self.date[4..].parse::<i32>().unwrap_or(0) + 2000;
+
+            return Ok((day, month, year));
+        }
+        println!("RMD date: {}", self.date);
+        Err(GpsError::new(GpsErrorType::Fix))
+    }
 }
