@@ -145,97 +145,89 @@ Now each time the raspberry starts, you should have a correct date and time.
 
 ## Config file
 
-The configuration file contains all the parameters needed to configure the mission and the hardware used.
-It's format is the typical INI file, divided in several sections for each mission parameter and hardware.
+The configuration file contains all the parameters needed to configure the mission and the hardware used. It will be stored in XDG_CONFIG_HOME/ashab-rs/ashab-rs.toml (usually $HOME/.config/..)
+It's format is a TOML file, with entries for each mission parameter and hardware:
 
-* [mission] : Mission identifiers, telemetry format and intervals.
   * id: Mission main identifier (amateur radio callsign for example). Better if compatible with APRS.
   * subid: Mission sub identifuer (APRS callsign notation for example).
   * msg: Message added at the end of each telemetry packet and to the SSDV pictures.
   * separator: Separator character between fields in the telemetry packet (default "/" to make it compatible with APRS packets)
   * packet_repeat: number of telemetry packets to send between SSDV images
   * packet_delay: seconds between telemetry packets.
-* [gpio]: General GPIO used by the software (check StratoZero pins).
+
   * batt_enable_pin: GPIO (broadcom notation) used to enable and disable battery reading (consumes power). GPIO 24 on StratoZero board.
   * led_pin: GPIO used for status LED. GPIO 17 on StatoZero.
   * pwr_pin: GPIO used to configure RF power, high or low. GPIO 26 on StratoZero board.
-* [gps]: GPS port and baudrate.
-  * serial_port: serial port device (/dev/ttyAMA0, etc)
-  * speed: GPS baudrate (like 9600).
-* [lora]: LoRa radio SPI bus and configuration.
-  * cs: Chip Select channel for SPI bus. LoRa Radio on StatoZero board uses CS 0.
-  * int_pin: LoRa Radio interrupt pin. Used to check received packets or radio activity. StratoZero uses GPIO 25.
-  * freq: LoRa Radio output frequency (in MHz).
-  * low_pwr: Low RF power, useful when testing on ground. See high_pwr.
-  * high_pwr: High RF power, used when flying. RF95 LoRa radios used in the StatoZero boards minimun and maximum power leves are 5-20.
-* [adc]: Analog to digital converter bus and battery calibration.
-  * cs: Chip Select channel for SPI bus. MCP3002 ADC on StratoZero board uses CS 1.
-  * vbatt: ADC channel used to read battery. StratoZero board uses ADC channel 0.
-  * v_divider: voltage divider ratio. StratoZero uses a 3.2 ratio for using 2 cell LiPo battery.
-  * v_mult: multiplier to calibrate battery readings.
-* [temp]: Temperature sensors addresses.
-  * internal_addr &
-  * external_addr: 1-Wire bus addresses of the DS18B20 temperature sensors. You can find them in /sys/bus/w1/devices/
-* [baro]: Barometer i2c configuration.
-  * i2c_bus: Raspberry Pi has 2 i2c buses. External i2c bus (the one present in the GPIO pins) is bus 1.
-  * i2c_addr: i2c address of the baraometer. StratoZero uses a MS5607 sensor with address 0x77
-* [paths]: General paths for mission logs and images
-  * main_dir: main path where we store logs, images, etc.
-  * images_dir: image storage relative path (to main_dir)
-  * log_prefix: prefix of the log file name, will be completed with datetime and ".log" extension.
-* [ssdv]: SSDV image configuration.
-  * size: SSDV image resolution. WIDTHxHEIGHT pixels, like 640x480.
-  * name: temporary filename for the SSDV image conversion.
+
+  * gps_serial_port: serial port device (/dev/ttyAMA0, etc)
+  * gps_speed: GPS baudrate (like 9600).
+
+  * lora_cs: Chip Select channel for SPI bus. LoRa Radio on StatoZero board uses CS 0.
+  * lora_int_pin: LoRa Radio interrupt pin. Used to check received packets or radio activity. StratoZero uses GPIO 25.
+  * lora_freq: LoRa Radio output frequency (in MHz).
+  * lora_low_pwr: Low RF power, useful when testing on ground. See high_pwr.
+  * lora_high_pwr: High RF power, used when flying. RF95 LoRa radios used in the StatoZero boards minimun and maximum power leves are 5-20.
+
+  * adc_cs: Chip Select channel for SPI bus. MCP3002 ADC on StratoZero board uses CS 1.
+  * adc_vbatt: ADC channel used to read battery. StratoZero board uses ADC channel 0.
+  * adc_v_divider: voltage divider ratio. StratoZero uses a 3.2 ratio for using 2 cell LiPo battery.
+  * adc_v_mult: multiplier to calibrate battery readings.
+
+  * temp_internal_addr &
+  * temp_external_addr: 1-Wire bus addresses of the DS18B20 temperature sensors. You can find them in /sys/bus/w1/devices/
+
+  * baro_i2c_bus: Raspberry Pi has 2 i2c buses. External i2c bus (the one present in the GPIO pins) is bus 1.
+  * baro_i2c_addr: i2c address of the baraometer. StratoZero uses a MS5607 sensor with address 0x77
+
+  * path_main_dir: main path where we store logs, images, etc.
+  * path_images_dir: image storage relative path (to main_dir)
+  * path_log_prefix: prefix of the log file name, will be completed with datetime and ".log" extension.
+
+  * ssdv_size: SSDV image resolution. WIDTHxHEIGHT pixels, like 640x480.
+  * ssdv_name: temporary filename for the SSDV image conversion.
 
 An example of a config file:
 
 ```
-[mission]
-id = MISSION
-subid = /ID
-msg = High Altitude Balloon mission\ninfo@foo.bar
-separator = /
+
+id = 'MISSION'
+subid = '/ID'
+msg = 'High Altitude Balloon mission\ninfo@foo.bar'
+separator = '/'
 packet_repeat = 20 
 packet_delay = 5 
 
-[gpio]
 batt_enable_pin = 24
 led_pin = 17
 pwr_pin = 26
 
-[gps]
-serial_port = /dev/ttyAMA0
-speed = 9600
+gps_serial_port = '/dev/ttyAMA0'
+gps_speed = 9600
 
-[lora]
-cs = 0
-int_pin = 25
-freq = 868.5
-low_pwr = 5
-high_pwr = 20
+lora_cs = 0
+lora_int_pin = 25
+lora_freq = 868.5
+lora_low_pwr = 5
+lora_high_pwr = 20
 
-[adc]
-cs = 1
-vbatt = 0
-v_divider = 3.2
-v_mult = 1.07
+adc_cs = 1
+adc_vbatt = 0
+adc_v_divider = 3.2
+adc_v_mult = 1.07
 
-[temp]
-internal_addr = 28-041682c3dbff
-external_addr = 28-0316b56c09ff 
+temp_internal_addr = '28-041682c3dbff'
+temp_external_addr = '28-0316b56c09ff' 
 
-[baro]
-i2c_bus = 1
-i2c_addr = 0x77
+baro_i2c_bus = 1
+baro_i2c_addr = 0x77
 
-[paths]
-main_dir = /home/pi/MISSION/
-images_dir = images/
-log_prefix = missionlog
+path_main_dir = '/home/pi/MISSION/'
+path_images_dir = 'images/'
+path_log_prefix = 'missionlog'
 
-[ssdv]
-size = 320x240
-name = ssdv.jpg
+
+ssdv_size = '320x240'
+ssdv_name = 'ssdv.jpg'
 
 ```
 

@@ -16,10 +16,12 @@
 
 // Main mission code.
 
+
+extern crate confy;
+extern crate serde_derive;
 extern crate chrono;
 extern crate image;
 extern crate imageproc;
-extern crate ini;
 extern crate rusttype;
 extern crate serial;
 extern crate spidev;
@@ -65,10 +67,6 @@ use telemetry::*;
 mod ssdv;
 use ssdv::*;
 
-// CONFIGURATION
-/////////////////
-
-const CONFIG_FILE: &'static str = "/home/pi/nsx.cfg";
 
 // MISSION STRUCT
 //////////////////
@@ -209,7 +207,7 @@ impl Mission {
             _ => {}
         }
 
-        self.log.log(LogType::Info, &format!("Power selection: {}", self.pwr_sel));
+        self.log.log(LogType::Info, &format!("Power selection: {}", self.pwr_sel))?;
     
         Ok(())
     }
@@ -443,14 +441,18 @@ impl Mission {
 
 fn main() {
     // Test configuration file
-    let mut config: Config = Config::new(CONFIG_FILE);
-    match config.open() {
-        Ok(()) => println!("{}", config.id),
+    let config: Config = match confy::load("ashab-rs") {
+        Ok(c) => {c},
         Err(e) => {
-            println!("Error: {}", e.info);
+            println!("Problem reading configuration file: {}", e);
             std::process::exit(1);
         }
     };
+    // now test that configuration is not the default one
+    if &config.id == "" {
+        println!("Please edit the configuration file.");
+        std::process::exit(1);
+    }
 
     // create mission and configure it
     let mut mission: Mission = Mission::new(&config);
