@@ -449,7 +449,9 @@ fn main() {
         }
     };
     // now test that configuration is not the default one
-    if &config.id == "" {
+    if &config.id == "" || &config.subid == "" || &config.msg == "" ||
+        &config.separator == "" || &config.path_main_dir == "" ||
+        &config.gps_serial_port == "" {
         println!("Please edit the configuration file.");
         std::process::exit(1);
     }
