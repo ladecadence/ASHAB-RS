@@ -75,7 +75,7 @@ $ sudo systemctl daemon-reload
 $ sudo systemctl enable ashabpi.service
 ```
 
-If you don't have a configuration file (see [Config File section below](##config-file)), a default one will be created (with empty values) and the program will exit. The program will not run until the default configuration values are edited.
+If you don't have a configuration file (see [Config File section below](#config-file)), a default one will be created (with empty values) and the program will exit. The program will not run until the default configuration values are edited.
 
 ## RTC
 
