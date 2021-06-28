@@ -99,8 +99,8 @@ impl ::std::default::Default for Config {
             path_images_dir: "".to_string(),
             path_log_prefix: "".to_string(),
 
-            ssdv_size: "".to_string(),
-            ssdv_name: "".to_string(),
+            ssdv_size: "320x240".to_string(),
+            ssdv_name: "ssdv.jpg".to_string(),
 
         }
     }
