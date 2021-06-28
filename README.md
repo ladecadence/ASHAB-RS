@@ -59,8 +59,7 @@ $ cargo build --target=arm-unknown-linux-gnueabihf
 
 ```
 
-Then put the configuration file (nsx.cfg) in your /home/pi folder 
-(or change the path in mission.rs) and create a folder for the data (defined in nsx.cfg)
+Thencreate a folder for the data (defined in the configuration file)
 and inside it a pictures/ folder
 
 * /home/pi
@@ -75,6 +74,8 @@ For this you can use the included ashabpi.service systemd file, modify it to you
 $ sudo systemctl daemon-reload
 $ sudo systemctl enable ashabpi.service
 ```
+
+If you don't have a configuration file (see [Config File section below](##config-file)), a default one will be created (with empty values) and the program will exit. The program will not run until the default configuration values are edited.
 
 ## RTC
 
