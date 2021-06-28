@@ -45,27 +45,34 @@ $ cargo build
 
 ```
 
-You can also build the binary on your host computer, in linux install the cross-compiler for raspberry pi:
+You can also build the binary on your host computer, in linux install the cross-compiler for raspberry pi, for example:
 
 ```
-$ sudo apt install install gcc-arm-linux-gnueabihf 
+$ sudo apt install install gcc-10-arm-linux-gnueabi
 
 ```
 
-And build using cargo cross compiling abilities
+Tell Rust to cross compile for the Raspberry Pi 1/Zero:
 
 ```
-$ cargo build --target=arm-unknown-linux-gnueabihf
+$ rustup target add arm-unknown-linux-gnueabi
+$ mkdir .cargo
+$ echo "[target.arm-unknown-linux-gnueabi]\nlinker = 'arm-linux-gnueabi-gcc-10'" >> .cargo/config 
+```
+
+And build using cargo cross compiling abilities:
+
+```
+$ cargo build --target=arm-unknown-linux-gnueabi
 
 ```
 
 Thencreate a folder for the data (defined in the configuration file)
 and inside it a pictures/ folder
 
-* /home/pi
-* nsx.cfg
-* MISSION/
-  * pictures/
+* /home/pi/
+ * MISSION/
+   * pictures/
 
 Then you'll need to run the binary after the raspberry finishes booting.
 For this you can use the included ashabpi.service systemd file, modify it to your binary path, copy it to /lib/systemd/system/ chmod 644 it, and run
@@ -231,4 +238,3 @@ ssdv_size = '320x240'
 ssdv_name = 'ssdv.jpg'
 
 ```
-

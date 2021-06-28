@@ -19,3 +19,4 @@ confy = "0.4"
 [[bin]]
 name = "mission"
 path = "src/mission.rs"
+
