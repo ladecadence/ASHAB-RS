@@ -248,7 +248,7 @@ impl GPS {
 
             return Ok((day, month, year));
         }
-        println!("RMD date: {}", self.date);
+        println!("RMC date: {}", self.date);
         Err(GpsError::new(GpsErrorType::Fix))
     }
 }
