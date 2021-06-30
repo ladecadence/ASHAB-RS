@@ -17,12 +17,34 @@
 // Gets data from an MCP3002 analog to digital converter
 
 extern crate spidev;
+use std::io;
+
 use spidev::{Spidev, SpidevOptions, SpidevTransfer, SPI_MODE_0};
+
+#[derive(Debug)]
+pub enum Mcp3002ErrorType {
+    Open,
+    Configure,
+    Read,
+    Channel,
+}
+
+#[derive(Debug)]
+pub struct Mcp3002Error {
+    pub error_type: Mcp3002ErrorType,
+}
+
+impl Mcp3002Error {
+    pub fn new(t: Mcp3002ErrorType) -> Self {
+        Self { error_type: t }
+    }
+}
+
 
 #[allow(dead_code)]
 pub struct Mcp3002 {
     pub csel: u8,
-    pub spidev: Spidev,
+    pub spidev: io::Result<Spidev>,
 }
 
 impl Mcp3002 {
@@ -31,24 +53,34 @@ impl Mcp3002 {
             csel: cs,
             spidev: Spidev::open(
                 String::from("/dev/spidev") + &ch.to_string() + &"." + &cs.to_string(),
-            )
-            .unwrap(),
+            ),
         }
     }
 
-    pub fn init(&mut self) {
+    pub fn init(&mut self) -> Result<(), Mcp3002Error> {
+        match self.spidev {
+            Ok(_) => {},
+            Err(_) => {return Err(Mcp3002Error::new(Mcp3002ErrorType::Open))},
+        }
         // configure SPI
         let options = SpidevOptions::new()
             .bits_per_word(8)
             .max_speed_hz(488000)
             .mode(SPI_MODE_0)
             .build();
-        self.spidev.configure(&options).unwrap();
+
+        if let Ok(port) = &mut self.spidev {
+            match port.configure(&options) {
+                Ok(_) => {}
+                Err(_e) => { return Err(Mcp3002Error::new(Mcp3002ErrorType::Configure)) },
+            }
+        }
+        Ok(())
     }
 
-    pub fn read(&mut self, adc_number: u8) -> Result<u32, &'static str> {
+    pub fn read(&mut self, adc_number: u8) -> Result<u32, Mcp3002Error> {
         if adc_number > 1 {
-            return Err("Wrong adc channel");
+            return Err(Mcp3002Error::new(Mcp3002ErrorType::Channel));
         }
 
         // Start bit, single channel read
@@ -60,7 +92,12 @@ impl Mcp3002 {
 
         {
             let mut transfer = SpidevTransfer::read_write(&tx_buf, &mut rx_buf);
-            self.spidev.transfer(&mut transfer).unwrap();
+            if let Ok(port) = &self.spidev {
+                match port.transfer(&mut transfer) {
+                    Ok(_) => {}
+                    Err(_e) => { return Err(Mcp3002Error::new(Mcp3002ErrorType::Read)) },
+                }
+            }
         }
 
         let mut result: u32 = (rx_buf[0] as u32 & 0x01) << 9;
