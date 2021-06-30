@@ -137,7 +137,18 @@ impl Mission {
         self.led.blink();
 
         // ADC and battery
-        self.mcp3002.init();
+        match self.mcp3002.init() {
+            Ok(()) => {}
+            Err(e) => {
+                match e.error_type {
+                    Mcp3002ErrorType::Open => { println!("Can't open ADC SPI port"); }
+                    Mcp3002ErrorType::Configure => { println!("Can't configure ADC SPI port"); }
+                    _ => {}
+                }
+
+                std::process::exit(1);
+            }
+        }
 
         match self.batt_en_pin.export() {
             Ok(()) => {}
@@ -296,8 +307,14 @@ impl Mission {
                 n
             }
             Err(e) => {
-                self.log
-                    .log(LogType::Warn, &format!("Error reading ADC: {}", e))?;
+                match e.error_type {
+                    Mcp3002ErrorType::Read => {
+                        self.log.log(LogType::Warn,
+                            &"Error reading ADC")?; }
+                    Mcp3002ErrorType::Channel => {
+                        self.log.log(LogType::Warn, &"Wrong ADC channel")?; }
+                    _ => {}
+                }
                 0
             }
         };
