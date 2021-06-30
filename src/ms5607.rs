@@ -23,6 +23,24 @@ use i2cdev::linux::LinuxI2CDevice;
 use std::thread;
 use std::time::Duration;
 
+
+#[derive(Debug)]
+pub enum Ms5607ErrorType {
+    Write,
+    Read,
+}
+
+#[derive(Debug)]
+pub struct Ms5607Error {
+    pub error_type: Ms5607ErrorType,
+}
+
+impl Ms5607Error {
+    pub fn new(t: Ms5607ErrorType) -> Self {
+        Self { error_type: t }
+    }
+}
+
 // MS5607 I2C commands
 const MS5607_CMD_RESET: u8 = 0x1E; // reset
 const MS5607_CMD_ADC_READ: u8 = 0x00; // read sequence
@@ -62,31 +80,42 @@ impl Ms5607 {
         }
     }
 
-    pub fn read_prom(&mut self) -> Result<(), &'static str> {
-        self.bus
-            .smbus_write_byte_data(0x00, MS5607_CMD_RESET)
-            .unwrap();
+    pub fn read_prom(&mut self) -> Result<(), Ms5607Error> {
+        match self.bus
+                .smbus_write_byte_data(0x00, MS5607_CMD_RESET) {
+            Ok(_) => {}
+            Err(_e) => { return Err(Ms5607Error::new(Ms5607ErrorType::Write)) }
+
+        }
         thread::sleep(Duration::from_millis(30));
         let mut temp: [u8; 2] = [0, 0];
         for i in 0..7 {
             self.prom[i] = 0x0000;
-            self.bus
-                .write(&[MS5607_CMD_PROM_RD + (2 * i as u8)])
-                .unwrap();
-            self.bus.read(&mut temp).unwrap();
+            match self.bus
+                    .write(&[MS5607_CMD_PROM_RD + (2 * i as u8)]) {
+                Ok(_) => {}
+                Err(_e) => { return Err(Ms5607Error::new(Ms5607ErrorType::Write)) }
+
+            }
+            match self.bus.read(&mut temp) {
+                Ok(_) => {}
+                Err(_e) => { return Err(Ms5607Error::new(Ms5607ErrorType::Read)) }
+            }
             self.prom[i] = (temp[0] as u16) << 8;
             self.prom[i] = self.prom[i] + temp[1] as u16;
         }
-        //println!("Prom: {:?}", self.prom);
 
         Ok(())
     }
 
-    pub fn read_adc(&mut self, cmd: u8) -> Result<i64, &'static str> {
+    pub fn read_adc(&mut self, cmd: u8) -> Result<i64, Ms5607Error> {
         // start conversion
-        self.bus
-            .smbus_write_byte_data(MS5607_CMD_ADC_CONV + cmd, 0)
-            .unwrap();
+        match self.bus
+            .smbus_write_byte_data(MS5607_CMD_ADC_CONV + cmd, 0) {
+            Ok(_) => {}
+            Err(_e) => { return Err(Ms5607Error::new(Ms5607ErrorType::Write)) }
+
+        }
 
         // wait for ADC
         match cmd & 0x0f {
@@ -100,22 +129,28 @@ impl Ms5607 {
 
         // read result bytes and create converted value
         let mut data: [u8; 3] = [0, 0, 0];
-        self.bus.write(&[MS5607_CMD_ADC_READ]).unwrap();
+        match self.bus.write(&[MS5607_CMD_ADC_READ]) {
+            Ok(_) => {}
+            Err(_e) => { return Err(Ms5607Error::new(Ms5607ErrorType::Write)) }
 
-        self.bus.read(&mut data).unwrap();
+        }
+
+        match self.bus.read(&mut data) {
+            Ok(_) => {}
+            Err(_e) => { return Err(Ms5607Error::new(Ms5607ErrorType::Read)) }
+
+        }
 
         let value: i64 = ((data[0] as i64) << 16) + ((data[1] as i64) << 8) + data[2] as i64;
 
         Ok(value)
     }
 
-    pub fn update(&mut self) -> Result<(), &'static str> {
+    pub fn update(&mut self) -> Result<(), Ms5607Error> {
         let d2: i64 = self
-            .read_adc(MS5607_CMD_ADC_D2 + MS5607_CMD_ADC_4096)
-            .unwrap();
+            .read_adc(MS5607_CMD_ADC_D2 + MS5607_CMD_ADC_4096)?;
         let d1: i64 = self
-            .read_adc(MS5607_CMD_ADC_D1 + MS5607_CMD_ADC_4096)
-            .unwrap();
+            .read_adc(MS5607_CMD_ADC_D1 + MS5607_CMD_ADC_4096)?;
 
         // calculate 1st order pressure and temperature
         // (MS5607 1st order algorithm)
@@ -152,11 +187,11 @@ impl Ms5607 {
         Ok(())
     }
 
-    pub fn get_temp(&mut self) -> Result<f32, &'static str> {
+    pub fn get_temp(&mut self) -> Result<f32, Ms5607Error> {
         return Ok(self.temp as f32 / 100.0);
     }
 
-    pub fn get_pres(&mut self) -> Result<f32, &'static str> {
+    pub fn get_pres(&mut self) -> Result<f32, Ms5607Error> {
         return Ok(self.p as f32 / 100.0);
     }
 }
