@@ -174,7 +174,16 @@ impl Mission {
         }
 
         // Barometer
-        self.baro.read_prom().unwrap();
+        match self.baro.read_prom() {
+            Ok(_) => {}
+            Err(e) => {
+                match e.error_type {
+                    Ms5607ErrorType::Read => { println!("Can't read from the I2C bus"); }
+                    Ms5607ErrorType::Write => { println!("Can't write to the I2C bus"); }
+                }
+                std::process::exit(1);
+            }
+        }
 
         // LoRa radio
         match self.lora.init() {
