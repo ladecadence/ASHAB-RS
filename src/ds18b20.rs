@@ -54,10 +54,10 @@ impl DS18B20 {
         reader.read_line(&mut buffer)?;
 
         // ok, we have second line in buffer, parse it
-        let data: Vec<&str> = buffer.split(" ").collect();
+        let data: Vec<&str> = buffer.split(' ').collect();
 
         self.temp = f32::from_str(&data[9][2..].trim()).unwrap_or(999999.0);
-        self.temp = self.temp / 1000.0;
+        self.temp /= 1000.0;
 
         // return Ok(temp)
         Ok(self.temp)
