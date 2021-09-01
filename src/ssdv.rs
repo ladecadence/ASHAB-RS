@@ -60,8 +60,8 @@ impl SSDV {
             image_file: img.clone(),
             id: i,
             count: cnt,
-            filename: img.clone(),
-            binaryname: p.clone() + &b + ".bin",
+            filename: img,
+            binaryname: p + &b + ".bin",
             packets: 0,
         }
     }
@@ -96,7 +96,7 @@ impl SSDV {
             };
         } else {
             // exit code not 0
-            return Err(SSDVError::new(SSDVErrorType::External));
+            Err(SSDVError::new(SSDVErrorType::External))
         }
     }
 
