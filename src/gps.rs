@@ -108,9 +108,8 @@ impl GPS {
 
     // configure serial port
     pub fn config(&mut self) -> Result<(), GpsError> {
-        match self.port.as_ref() {
-            Err(_e) => return Err(GpsError::new(GpsErrorType::Open)),
-            Ok(_) => {}
+        if let Err(_e) = self.port.as_ref() {
+            return Err(GpsError::new(GpsErrorType::Open))
         }
 
         self.port
@@ -133,7 +132,7 @@ impl GPS {
         // Get GGA line
         self.line_gga.clear();
         let mut is_gga: String = self.line_gga.chars().skip(3).take(3).collect();
-        while is_gga != "GGA".to_string() {
+        while is_gga != *"GGA" {
             self.line_gga.clear();
             match reader.read_line(&mut self.line_gga) {
                 Ok(_) => {}
@@ -151,7 +150,7 @@ impl GPS {
         // and get RMC line
         self.line_rmc.clear();
         let mut is_rmc: String = self.line_rmc.chars().skip(3).take(3).collect();
-        while is_rmc != "RMC".to_string() {
+        while is_rmc != *"RMC" {
             self.line_rmc.clear();
             match reader.read_line(&mut self.line_rmc) {
                 Ok(_) => {}
@@ -164,8 +163,8 @@ impl GPS {
         }
 
         // Now parse data
-        let gga_data: Vec<&str> = self.line_gga.split(",").collect();
-        let rmc_data: Vec<&str> = self.line_rmc.split(",").collect();
+        let gga_data: Vec<&str> = self.line_gga.split(',').collect();
+        let rmc_data: Vec<&str> = self.line_rmc.split(',').collect();
 
         // enough fields?
         if gga_data.len() >= 9 && rmc_data.len() >= 8 {
