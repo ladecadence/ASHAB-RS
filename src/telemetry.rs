@@ -162,9 +162,9 @@ impl Telemetry {
 
         let mut aprs = String::from("$$");
         aprs.push_str(&self.id);
-        aprs.push_str("!");
+        aprs.push('!');
         aprs.push_str(&coords);
-        aprs.push_str("O");
+        aprs.push('O');
         aprs.push_str(&format!("{:.1}", self.hdg));
         aprs.push_str(&self.sep);
         aprs.push_str(&format!("{:.1}", self.spd));
@@ -216,32 +216,20 @@ impl Telemetry {
 
     pub fn csv_string(&mut self) -> String {
         let mut csv = String::from("");
-        csv.push_str(&format!("{}", self.date));
-        csv.push_str(",");
-        csv.push_str(&format!("{}", self.time));
-        csv.push_str(",");
-        csv.push_str(&format!("{}", self.dec_lat()));
-        csv.push_str(&format!("{}", self.ns));
-        csv.push_str(",");
-        csv.push_str(&format!("{}", self.dec_lon()));
-        csv.push_str(&format!("{}", self.ew));
-        csv.push_str(",");
-        csv.push_str(&format!("{:.1}", self.alt));
-        csv.push_str(",");
-        csv.push_str(&format!("{:.2}", self.vbat));
-        csv.push_str(",");
-        csv.push_str(&format!("{:.1}", self.tin));
-        csv.push_str(",");
-        csv.push_str(&format!("{:.1}", self.tout));
-        csv.push_str(",");
-        csv.push_str(&format!("{:.1}", self.baro));
-        csv.push_str(",");
-        csv.push_str(&format!("{:.1}", self.hdg));
-        csv.push_str(",");
-        csv.push_str(&format!("{:.1}", self.spd));
-        csv.push_str(",");
-        csv.push_str(&format!("{}", self.sats));
-        csv.push_str(",");
+        csv.push_str(&format!("{},", self.date));
+        csv.push_str(&format!("{},", self.time));
+        csv.push_str(&format!("{},", self.dec_lat()));
+        csv.push_str(&format!("{},", self.ns));
+        csv.push_str(&format!("{},", self.dec_lon()));
+        csv.push_str(&format!("{},", self.ew));
+        csv.push_str(&format!("{:.1},", self.alt));
+        csv.push_str(&format!("{:.2},", self.vbat));
+        csv.push_str(&format!("{:.1},", self.tin));
+        csv.push_str(&format!("{:.1},", self.tout));
+        csv.push_str(&format!("{:.1},", self.baro));
+        csv.push_str(&format!("{:.1},", self.hdg));
+        csv.push_str(&format!("{:.1},", self.spd));
+        csv.push_str(&format!("{},", self.sats));
         csv.push_str(&format!("{:.1}", self.arate));
 
         // return string
