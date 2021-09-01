@@ -33,43 +33,36 @@ impl LED {
         }
     }
 
-    pub fn init(&mut self) -> Result<(), &'static str> {
+    pub fn init(&mut self) -> Result<(), sysfs_gpio::Error> {
         // export the pin and set it as an output
-        match self.pin.export() {
-            Ok(()) => {}
-            Err(_err) => return Err("Can't export pin"),
-        }
+        self.pin.export()?;
 
-        match self.pin.set_direction(Direction::Out) {
-            Ok(()) => {}
-            Err(_err) => return Err("Can't set gpio direction"),
-        }
+        self.pin.set_direction(Direction::Out)?;
 
-        // pull the pin low
-        match self.pin.set_value(0) {
-            Ok(()) => {}
-            Err(_err) => return Err("Can't set pin value"),
-        }
+        self.pin.set_value(0)?;
 
         Ok(())
     }
 
     // fast blink
-    pub fn blink(&mut self) {
-        self.pin.set_value(1).unwrap();
+    pub fn blink(&mut self) -> Result<(), sysfs_gpio::Error> {
+        self.pin.set_value(1)?;
         thread::sleep(Duration::from_millis(1));
-        self.pin.set_value(0).unwrap();
+        self.pin.set_value(0)?;
+        Ok(())
     }
 
     // error
-    pub fn err(&mut self) {
+    pub fn err(&mut self) -> Result<(), sysfs_gpio::Error> {
         for _i in 0..5 {
-            self.pin.set_value(1).unwrap();
+            self.pin.set_value(1)?;
             thread::sleep(Duration::from_millis(1));
-            self.pin.set_value(0).unwrap();
+            self.pin.set_value(0)?;
             thread::sleep(Duration::from_millis(1));
         }
         // keep it on
-        self.pin.set_value(1).unwrap();
+        self.pin.set_value(1)?;
+
+        Ok(())
     }
 }
