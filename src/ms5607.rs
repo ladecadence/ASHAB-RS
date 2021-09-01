@@ -102,7 +102,7 @@ impl Ms5607 {
                 Err(_e) => { return Err(Ms5607Error::new(Ms5607ErrorType::Read)) }
             }
             self.prom[i] = (temp[0] as u16) << 8;
-            self.prom[i] = self.prom[i] + temp[1] as u16;
+            self.prom[i] += temp[1] as u16;
         }
 
         Ok(())
@@ -173,14 +173,14 @@ impl Ms5607 {
             sens2 = 2 * (self.temp - 2000) * (self.temp - 2000);
 
             if self.temp < -1500 {
-                off2 = off2 + (15 * (self.temp + 1500) * (self.temp + 1500));
-                sens2 = sens2 + (8 * (self.temp + 1500) * (self.temp + 1500));
+                off2 += (15 * (self.temp + 1500) * (self.temp + 1500));
+                sens2 += (8 * (self.temp + 1500) * (self.temp + 1500));
             }
         }
 
-        self.temp = self.temp - t2;
-        off = off - off2;
-        sens = sens - sens2;
+        self.temp -= t2;
+        off -= off2;
+        sens -= sens2;
 
         self.p = ((d1 * sens) / (2_i64.pow(21)) - off) / (2_i64.pow(15));
 
@@ -188,10 +188,10 @@ impl Ms5607 {
     }
 
     pub fn get_temp(&mut self) -> Result<f32, Ms5607Error> {
-        return Ok(self.temp as f32 / 100.0);
+        Ok(self.temp as f32 / 100.0)
     }
 
     pub fn get_pres(&mut self) -> Result<f32, Ms5607Error> {
-        return Ok(self.p as f32 / 100.0);
+        Ok(self.p as f32 / 100.0)
     }
 }
