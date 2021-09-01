@@ -308,7 +308,7 @@ impl RF95 {
             data[i as usize] = self.spi_read(reg + i);
         }
 
-        return data;
+        data
     }
 
     // configure SPI bus and RF95 LoRa default mode
@@ -405,7 +405,7 @@ impl RF95 {
 
         if power > 20 {
             self.spi_write(REG_4D_PA_DAC, PA_DAC_ENABLE);
-            power = power - 3;
+            power -= 3;
         } else {
             self.spi_write(REG_4D_PA_DAC, PA_DAC_DISABLE);
         }
@@ -482,20 +482,20 @@ impl RF95 {
                 thread::sleep(time::Duration::from_millis(10));
             }
 
-            self.tx_good = self.tx_good + 1;
+            self.tx_good += 1;
 
             // clear IRQ flags
             self.spi_write(REG_12_IRQ_FLAGS, 0xff);
 
             self.set_mode_idle();
 
-            return true;
+            true
         } else {
             while self.mode == RADIO_MODE_TX {
                 thread::sleep(time::Duration::from_millis(10));
             }
 
-            return true;
+            true
         }
     }
 
@@ -523,7 +523,7 @@ impl RF95 {
 
                 // We have received a message.
                 // validateRxBuf();  TO BE IMPLEMENTED
-                self.rx_good = self.rx_good + 1;
+                self.rx_good += 1;
                 self.rx_buf_valid = true;
                 if self.rx_buf_valid {
                     self.set_mode_idle();
@@ -540,9 +540,9 @@ impl RF95 {
             }
 
             self.set_mode_rx();
-            return Ok(self.rx_buf_valid);
+            Ok(self.rx_buf_valid)
         } else {
-            return Ok(false);
+            Ok(false)
         }
     }
 
