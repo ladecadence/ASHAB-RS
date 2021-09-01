@@ -52,7 +52,7 @@ impl Mcp3002 {
         Self {
             csel: cs,
             spidev: Spidev::open(
-                String::from("/dev/spidev") + &ch.to_string() + &"." + &cs.to_string(),
+                String::from("/dev/spidev") + &ch.to_string() + "." + &cs.to_string(),
             ),
         }
     }
@@ -104,6 +104,6 @@ impl Mcp3002 {
         result |= (rx_buf[1] as u32 & 0xff) << 1;
         result |= (rx_buf[2] as u32 & 0x80) >> 7;
 
-        return Ok(result & 0x3ff);
+        Ok(result & 0x3ff)
     }
 }
