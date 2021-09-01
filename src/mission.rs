@@ -132,9 +132,12 @@ impl Mission {
         // Status LED
         match self.led.init() {
             Ok(()) => {}
-            Err(e) => println!("{}", e),
+            Err(e) => {
+                println!("Can't configure LED: {}", e);
+                std::process::exit(1);
+            }
         }
-        self.led.blink();
+        self.led.blink().unwrap();
 
         // ADC and battery
         match self.mcp3002.init() {
@@ -268,7 +271,7 @@ impl Mission {
                         .log(LogType::Warn, "GPS: Error parseando los datos")?,
                     _ => {}
                 };
-                self.led.err();
+                self.led.err().unwrap();
             }
         }
 
@@ -359,7 +362,7 @@ impl Mission {
         self.lora.send(self.telem.aprs_string().as_bytes());
         self.lora.wait_packet_sent();
         self.log.log(LogType::Info, "Telemetry packet sent.")?;
-        self.led.blink();
+        self.led.blink().unwrap();
         Ok(())
     }
 
@@ -479,6 +482,7 @@ fn main() {
         &config.separator == "" || &config.path_main_dir == "" ||
         &config.gps_serial_port == "" {
         println!("Please edit the configuration file.");
+        dbg!(config);
         std::process::exit(1);
     }
 
