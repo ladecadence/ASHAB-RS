@@ -88,7 +88,7 @@ impl Picture {
         self.filename = self.path.clone()
             + &self.basename
             + "-"
-            + &Utc::now().to_rfc3339().to_string()
+            + &Utc::now().to_rfc3339()
             + "-"
             + &self.number.to_string()
             + ".jpg";
@@ -120,7 +120,7 @@ impl Picture {
             if self.number == 255 {
                 self.number = 0; 
             } else {
-                self.number = self.number + 1;
+                self.number += 1;
             }
             self.captured = true;
             return Ok(());
@@ -132,7 +132,7 @@ impl Picture {
 
     pub fn capture_small(&mut self, name: String, res: String) -> Result<(), PictureError> {
         // get resolution
-        let resolution: Vec<&str> = res.split("x").collect();
+        let resolution: Vec<&str> = res.split('x').collect();
 
         // capture image
         let status = Command::new(STILL_PROGRAM)
@@ -174,7 +174,7 @@ impl Picture {
         data: String,
     ) -> Result<(), PictureError> {
         // get date
-        let datetime = Utc::now().to_rfc3339().to_string();
+        let datetime = Utc::now().to_rfc3339();
 
         // try to open image
         let mut image = match image::open(&file) {
@@ -229,7 +229,7 @@ impl Picture {
             45,
             scale,
             &font,
-            &format!("{}", &msg),
+            &msg.to_string()),
         );
         draw_text_mut(
             &mut image,
@@ -238,7 +238,7 @@ impl Picture {
             46,
             scale,
             &font,
-            &format!("{}", &msg),
+            &msg.to_string()),
         );
         draw_text_mut(
             &mut image,
@@ -247,7 +247,7 @@ impl Picture {
             65,
             scale,
             &font,
-            &format!("{}", &datetime),
+            &datetime.to_string()),
         );
         draw_text_mut(
             &mut image,
@@ -256,7 +256,7 @@ impl Picture {
             66,
             scale,
             &font,
-            &format!("{}", &datetime),
+            &datetime.to_string()),
         );
         draw_text_mut(
             &mut image,
@@ -265,7 +265,7 @@ impl Picture {
             80,
             scale,
             &font,
-            &format!("{}", &data),
+            &data.to_string()),
         );
         draw_text_mut(
             &mut image,
@@ -274,13 +274,13 @@ impl Picture {
             81,
             scale,
             &font,
-            &format!("{}", &data),
+            &data.to_string()),
         );
 
         // save modified image
         match image.save(&file) {
-            Ok(()) => return Ok(()),
-            Err(_e) => return Err(PictureError::new(PictureErrorType::IO)),
+            Ok(()) => Ok(()),
+            Err(_e) => Err(PictureError::new(PictureErrorType::IO)),
         }
     }
 }
