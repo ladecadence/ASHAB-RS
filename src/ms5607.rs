@@ -173,8 +173,8 @@ impl Ms5607 {
             sens2 = 2 * (self.temp - 2000) * (self.temp - 2000);
 
             if self.temp < -1500 {
-                off2 += (15 * (self.temp + 1500) * (self.temp + 1500));
-                sens2 += (8 * (self.temp + 1500) * (self.temp + 1500));
+                off2 += 15 * (self.temp + 1500) * (self.temp + 1500);
+                sens2 += 8 * (self.temp + 1500) * (self.temp + 1500);
             }
         }
 

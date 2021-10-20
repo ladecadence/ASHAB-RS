@@ -108,25 +108,20 @@ impl GPS {
 
     // configure serial port
     pub fn config(&mut self) -> Result<(), GpsError> {
-        if let Err(_e) = self.port.as_ref() {
-            return Err(GpsError::new(GpsErrorType::Open))
+        match &mut self.port {
+            Ok(p) => {
+                // this unwraps are ok as there is no flight without gps
+                p.configure(&self.settings).unwrap();
+                p.set_timeout(Duration::from_millis(1000)).unwrap();
+                Ok(())
+            },
+            Err(_) => Err(GpsError::new(GpsErrorType::Open)),
         }
-
-        self.port
-            .as_mut()
-            .unwrap()
-            .configure(&self.settings)
-            .unwrap();
-        self.port
-            .as_mut()
-            .unwrap()
-            .set_timeout(Duration::from_millis(1000))
-            .unwrap();
-        Ok(())
     }
 
     // update position data from NMEA sentences
     pub fn update(&mut self) -> Result<(), GpsError> {
+        // this will never panic as at this point port is ensured to be Ok
         let mut reader = BufReader::new(self.port.as_mut().unwrap());
 
         // Get GGA line

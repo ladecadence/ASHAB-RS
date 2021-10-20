@@ -28,21 +28,24 @@ use image::Rgba;
 use imageproc::drawing::draw_text_mut;
 
 extern crate rusttype;
-use rusttype::{FontCollection, Scale};
+use rusttype::{Scale, Font};
 
 // Constants and macros
 static STILL_PROGRAM: &'static str = "raspistill";
+/*
 macro_rules! FONT_FILE {
     () => {
         "TerminusTTF-4.46.0.ttf"
     };
 }
+*/
 
 const TEXT_BIG: f32 = 20.0;
 const TEXT_SMALL: f32 = 16.0;
 
 // Possible errors
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum PictureErrorType {
     Camera,
@@ -183,6 +186,7 @@ impl Picture {
         };
 
         // create font
+        /*
         let font = Vec::from(include_bytes!(FONT_FILE!()) as &[u8]);
         let font = match FontCollection::from_bytes(font) {
             Ok(f) => f,
@@ -192,12 +196,16 @@ impl Picture {
             Ok(f) => f,
             Err(_e) => return Err(PictureError::new(PictureErrorType::Modify)),
         };
+        */
+        let font = Vec::from(include_bytes!("TerminusTTF-4.46.0.ttf") as &[u8]);
+        let font = Font::try_from_vec(font).unwrap();
 
         // add data
         let scale = Scale {
             x: TEXT_BIG * 2.0,
             y: TEXT_BIG,
         };
+
         draw_text_mut(
             &mut image,
             Rgba([0u8, 0u8, 0u8, 255u8]),
@@ -207,6 +215,7 @@ impl Picture {
             &font,
             &format!("{}{}", &id, &subid),
         );
+
         draw_text_mut(
             &mut image,
             Rgba([255u8, 255u8, 255u8, 255u8]),
@@ -229,8 +238,8 @@ impl Picture {
             45,
             scale,
             &font,
-            &msg.to_string()),
-        );
+            &msg.to_string());
+
         draw_text_mut(
             &mut image,
             Rgba([255u8, 255u8, 255u8, 255u8]),
@@ -238,7 +247,7 @@ impl Picture {
             46,
             scale,
             &font,
-            &msg.to_string()),
+            &msg.to_string(),
         );
         draw_text_mut(
             &mut image,
@@ -247,7 +256,7 @@ impl Picture {
             65,
             scale,
             &font,
-            &datetime.to_string()),
+            &datetime.to_string(),
         );
         draw_text_mut(
             &mut image,
@@ -256,7 +265,7 @@ impl Picture {
             66,
             scale,
             &font,
-            &datetime.to_string()),
+            &datetime.to_string(),
         );
         draw_text_mut(
             &mut image,
@@ -265,7 +274,7 @@ impl Picture {
             80,
             scale,
             &font,
-            &data.to_string()),
+            &data.to_string(),
         );
         draw_text_mut(
             &mut image,
@@ -274,7 +283,7 @@ impl Picture {
             81,
             scale,
             &font,
-            &data.to_string()),
+            &data.to_string()
         );
 
         // save modified image
